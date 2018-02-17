@@ -1,7 +1,11 @@
+gtp-benchmarks
+===
+
+Gradual Typing Performance benchmark programs.
 
 
-
-### Rules
+Rules
+---
 
 - No I/O actions during timed computation
 - typed/untyped versions
@@ -10,3 +14,13 @@
 - Input sizes
 
 
+Glossary
+---
+
+[POPL 2016] = _Is Sound Gradual Typing Dead?_
+
+
+History
+---
+
+Original development: <https://github.com/nuprl/gradual-typing-performance>
