@@ -8,10 +8,9 @@ Rules
 ---
 
 - No I/O actions during timed computation
-- typed/untyped versions
-- Run at least 1 second, in fastest configuration
-  (preferably, at least 5 like DaCapo)
-- Input sizes
+- Able to run all typed/untyped configurations
+- Run for 1-5 seconds when untyped or fully-typed
+- Run for < 300 seconds in the worst case
 
 
 Glossary
