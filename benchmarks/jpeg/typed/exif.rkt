@@ -1,4 +1,4 @@
-#lang racket
+#lang typed/racket
 ;; racket-jpeg
 ;; Copyright (C) 2014 Andy Wingo <wingo at pobox dot com>
 
@@ -23,12 +23,13 @@
 
 (provide parse-exif)
 (require
-  "../base/untyped.rkt"
-  rnrs/bytevectors-6)
+  "../base/typedefs.rkt"
+  "../base/bytevectors-6-typed.rkt")
 
 ;; Exif version 2.3:
 ;; http://www.cipa.jp/std/documents/e/DC-008-2012_E.pdf
 
+(: *exif-tag-names* (Mutable-HashTable Integer Symbol))
 (define *exif-tag-names* (make-hasheqv))
 
 (define-syntax-rule (define-exif-tags table (value name) ...)
@@ -156,6 +157,7 @@
   (#xa40b device-settings-description)
   (#xa40c subject-distance-range))
 
+(: *type-widths* (Vector #f Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum Fixnum))
 (define *type-widths*
   #(#f ; 0 is unused.
     1 1 2 4 8 ; BYTE ASCII SHORT LONG RATIONAL
@@ -163,35 +165,54 @@
     4 8 ; FLOAT DOUBLE
     ))
 
+(define-type Exif-Type-Parser (-> Bytes Natural Endianness (U Natural (Pairof Natural Natural))))
+  ;(-> Bytes Natural Endianness (U Byte (Pairof Byte Byte))))
+(define-type Exif-Type-Parser2 Exif-Type-Parser)
+(: *type-parsers* (Vector #f
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser2
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser
+                          Exif-Type-Parser2
+                          Exif-Type-Parser
+                          Exif-Type-Parser))
 (define *type-parsers*
   (vector
    #f                                                  ; 0 is unused.
-   (lambda (bv pos order) (bytevector-u8-ref bv pos))  ; BYTE
-   (lambda (bv pos order) (error "unreachable"))       ; ASCII
-   (lambda (bv pos order) (bytevector-u16-ref bv pos order))  ; SHORT
-   (lambda (bv pos order) (bytevector-u32-ref bv pos order))  ; LONG
-   (lambda (bv pos order)
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-u8-ref bv pos))  ; BYTE
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (error "unreachable"))       ; ASCII
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-u16-ref bv pos order))  ; SHORT
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-u32-ref bv pos order))  ; LONG
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness))
      (cons (bytevector-u32-ref bv pos order)
            (bytevector-u32-ref bv (+ pos 4) order)))   ; RATIONAL
-   (lambda (bv pos order) (bytevector-s8-ref bv pos))  ; SBYTE
-   (lambda (bv pos order) (error "unreachable"))       ; UNDEFINED
-   (lambda (bv pos order) (bytevector-s16-ref bv pos order))  ; SSHORT
-   (lambda (bv pos order) (bytevector-s32-ref bv pos order))  ; SLONG
-   (lambda (bv pos order)
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-s8-ref bv pos))  ; SBYTE
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (error "unreachable"))       ; UNDEFINED
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-s16-ref bv pos order))  ; SSHORT
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-s32-ref bv pos order))  ; SLONG
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness))
      (cons (bytevector-u32-ref bv pos order)
            (bytevector-u32-ref bv (+ pos 4) order))) ; SRATIONAL
-   (lambda (bv pos order) (bytevector-ieee-single-ref bv pos order)) ; FLOAT
-   (lambda (bv pos order) (bytevector-ieee-double-ref bv pos order)) ; DOUBLE
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-ieee-single-ref bv pos order)) ; FLOAT
+   (lambda ((bv : Bytes) (pos : Natural) (order : Endianness)) (bytevector-ieee-double-ref bv pos order)) ; DOUBLE
    ))
 
+(: type-width (-> Natural (U #f Fixnum)))
 (define (type-width type)
   (and (< type (vector-length *type-widths*))
        (vector-ref *type-widths* type)))
 
+(: type-parser (-> Natural (U #f Exif-Type-Parser)))
 (define (type-parser type)
   (and (< type (vector-length *type-parsers*))
        (vector-ref *type-parsers* type)))
 
+(: read-value (-> Bytes Natural Endianness Natural Natural Interp))
 (define (read-value bv pos order type count)
   (case type
     ((2) ; ASCII
@@ -210,20 +231,21 @@
        (and parser
             (if (= count 1)
                 (parser bv pos order)
-                (let ((res (make-vector count))
+                (let ((res : (Vectorof Natural) (make-vector count))
                       (width (assert (type-width type) natural?)))
-                  (let lp ((n 0) (pos pos))
+                  (let lp : (Vectorof Natural) ((n : Natural 0) (pos : Natural pos))
                     (if (< n count)
                         (begin
                           (vector-set! res n (assert (parser bv pos order) natural?))
                           (lp (add1 n) (+ pos width)))
                         res)))))))))
 
+(: *value-interpreters* (Mutable-HashTable Symbol Value-Interpreter))
 (define *value-interpreters* (make-hasheq))
 
 (define-syntax-rule (define-value-interpreter (name value) body ...)
   (hash-set! *value-interpreters* 'name
-             (lambda (value) body ...)))
+             (lambda ((value : Natural)) body ...)))
 
 (define-value-interpreter (orientation value)
   (case value
@@ -437,6 +459,7 @@
     ((3) "Distant")
     (else value)))
 
+(: interpret-value (-> (U Integer Symbol) Interp Interp))
 (define (interpret-value name value)
   ;; bg: check symbol? to use the better type for hash-ref
   (let ((interpret (if (symbol? name) (hash-ref *value-interpreters* name #f) #f)))
@@ -444,13 +467,16 @@
         (interpret (assert value natural?))
         value)))
 
+(: parse-ifd-chain (-> Bytes Natural Symbol Natural (Listof PTs)))
 (define (parse-ifd-chain bv pos order max-depth)
+  (: inline-value? (-> Natural Natural Boolean))
   (define (inline-value? type count)
     (let ((byte-width (and (< type (vector-length *type-widths*))
                            (vector-ref *type-widths* type))))
       (and byte-width (<= (* byte-width count) 4))))
+  (: parse-tags (-> Natural PTs))
   (define (parse-tags tag-count)
-    (let lp  ((n  0))
+    (let lp : PTs ((n : Natural 0))
       (if (< n tag-count)
           (let* ((pos (+ pos 2 (* n 12)))
                  (tag (bytevector-u16-ref bv pos order))
@@ -478,7 +504,9 @@
            ((or (zero? next-pos) (not (positive? max-depth))) '())
            (else (parse-ifd-chain bv next-pos order (sub1 max-depth)))))))
 
+(: parse-exif (-> Bytes (Listof PTs)))
 (define (parse-exif bv)
+  (: parse-byte-order (-> Byte Byte Symbol))
   (define (parse-byte-order b0 b1)
     (unless (= b0 b1) (error "Bad TIFF header prefix"))
     (case (integer->char b0)

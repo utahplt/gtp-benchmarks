@@ -1,4 +1,4 @@
-#lang racket
+#lang typed/racket
 ;; guile-jpeg
 ;; Copyright (C) 2014 Andy Wingo <wingo at pobox dot com>
 
@@ -22,13 +22,45 @@
 ;;; Code:
 
 (require
-  "../base/untyped.rkt"
+  require-typed-check
+  "../base/typedefs.rkt"
+  (only-in math/array Array)
   (only-in racket/file file->bytes))
 
-(require "jfif.rkt")
-(require "exif.rkt")
+(require/typed/check "jfif.rkt"
+  (#:struct jfif ((frame : frame) (misc-segments : (Listof misc)) (mcu-array : (Array MCU))))
+  (#:struct frame
+    ((marker : Natural)
+     (precision : Byte)
+     (y : Natural)
+     (x : Natural)
+     (components : (Vectorof component))
+     (samp-x : Natural)
+     (samp-y : Natural)))
+  (#:struct component
+    ((id : Byte)
+     (index : Natural)
+     (samp-x : Natural)
+     (samp-y : Natural)
+     (q-table : Natural)))
+  (#:struct misc
+    ((marker : Natural)
+     (bytes : Bytes)))
+  (#:struct params
+    ((q-tables : QT*)
+     (dc-tables : H*)
+     (ac-tables : H*)
+     (restart-interval : Natural)
+     (misc-segments : (Listof misc))))
+  (read-jfif (->* [(U String Bytes Input-Port)] [#:with-body? Boolean #:with-misc-sections? Boolean] jfif))
+  (write-jfif (-> (U String Output-Port) jfif Void)))
 
+(require/typed/check "exif.rkt"
+  (parse-exif (-> Bytes (Listof PTs))))
 
+(define-type Jpeg jfif)
+
+(: jpeg-dimensions (-> Jpeg (Values Natural Natural)))
 (define (jpeg-dimensions jpeg)
   (let* ((jfif (if (jfif? jpeg)
                    jpeg
@@ -37,25 +69,30 @@
     (values (frame-x frame)
             (frame-y frame))))
 
+(: read-jpeg (-> (U Bytes String Input-Port) Jpeg))
 (define (read-jpeg jpeg)
   (read-jfif jpeg))
 
+(: write-jpeg (-> (U String Output-Port) Jpeg Void))
 (define (write-jpeg port jpeg)
   (write-jfif port jpeg))
 
+(: find-exif (-> (Listof misc) Any))
 (define (find-exif misc-segments)
+  (: bv-prefix? (-> Bytes Bytes Boolean))
   (define (bv-prefix? prefix bv)
     (and (>= (bytes-length bv) (bytes-length prefix))
          (let lp ((n 0))
            (or (= n (bytes-length prefix))
                (and (eqv? (bytes-ref prefix n) (bytes-ref bv n))
                     (lp (add1 n)))))))
-  (filter-map (lambda (misc)
+  (filter-map (lambda ((misc : misc))
                 (and (= (misc-marker misc) #xffe1) ; APP1
                      (bv-prefix? #"Exif\0\0" (misc-bytes misc))
                      (parse-exif (subbytes (misc-bytes misc) 6))))
               misc-segments))
 
+(: jpeg-dimensions-and-exif (-> Jpeg (Values Any Any Any)))
 (define (jpeg-dimensions-and-exif jpeg)
   (let* ((jfif (if (jfif? jpeg)
                    jpeg
@@ -85,6 +122,7 @@
 
 ;; -----------------------------------------------------------------------------
 
+(: main (-> Bytes Void))
 (define (main bytes)
   (define outb (open-output-bytes))
   (define j1 (read-jpeg bytes))

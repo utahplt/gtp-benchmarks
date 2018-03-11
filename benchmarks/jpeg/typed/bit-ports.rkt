@@ -1,4 +1,4 @@
-#lang racket
+#lang typed/racket
 ;; racket-jpeg
 ;; Copyright (C) 2014 Andy Wingo <wingo at pobox dot com>
 
@@ -30,12 +30,14 @@
          write-bits
          flush-bits)
 
-(require "../base/untyped.rkt")
+(require "../base/typedefs.rkt")
 
+(: make-bit-port (-> Port Bit-Port))
 (define (make-bit-port port)
   ;; Bit count, values, and the port
   (vector 0 0 port))
 
+(: next-u8 (-> Input-Port Byte))
 (define (next-u8 port)
   (let ((u8 (read-byte port)))
     (cond 
@@ -49,10 +51,11 @@
               (error "Found marker while reading bits"))))))
     u8))
 
+(: read-bits (-> Bit-Port Natural Integer))
 (define (read-bits bit-port n)
   (match bit-port
     ((vector count bits port)
-     (let lp ((count count) (bits bits))
+     (let lp : Integer ((count : Integer count) (bits : Natural bits))
        (cond
         ((<= n count)
          (vector-set! bit-port 0 (assert (- count n) natural?))
@@ -67,20 +70,24 @@
            (vector-set! bit-port 1 bits)
            (lp (+ count 8) bits))))))))
 
+(: read-bit (-> Bit-Port Integer))
 (define (read-bit bit-port)
   (read-bits bit-port 1))
 
+(: read-signed-bits (-> Bit-Port Natural Integer))
 (define (read-signed-bits bit-port n)
   (let ((bits (read-bits bit-port n)))
     (if (< bits (arithmetic-shift 1 (sub1 n)))
         (+ (arithmetic-shift -1 n) 1 bits)
         bits)))
 
+(: write-byte/stuff (-> Integer Output-Port Void))
 (define (write-byte/stuff u8 port)
   (write-byte u8 port)
   (when (eqv? u8 #xff)
     (write-byte 0 port)))
 
+(: write-bits (-> Bit-Port Integer Natural Void))
 (define (write-bits bit-port bits len)
   (cond
    ((negative? bits)
@@ -90,7 +97,7 @@
       ((vector count buf port)
        (unless (output-port? port)
          (raise-user-error 'bg2))
-       (let lp ((count count) (buf buf) (bits bits) (len len))
+       (let lp : Void ((count : Natural count) (buf buf) (bits : Integer bits) (len : Natural len))
          (cond
           ((< (+ count len) 8)
            (vector-set! bit-port 0 (+ count len))
@@ -110,6 +117,7 @@
               port)
              (lp 0 0 tail-bits tail-len))))))))))
 
+(: flush-bits (-> Bit-Port Void))
 (define (flush-bits bit-port)
   (match bit-port
     ((vector count bits port)
