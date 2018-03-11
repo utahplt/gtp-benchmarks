@@ -11,7 +11,7 @@
   Value-Interpreter
   Huffman)
 
-(require (only-in math/array Array))
+(require (only-in "math/array.rkt" Array))
 
 (define-type Bit-Port (Vector Natural Natural Port))
 

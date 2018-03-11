@@ -24,7 +24,7 @@
 (require
   require-typed-check
   "../base/typedefs.rkt"
-  (only-in math/array Array)
+  (only-in "../base/math/array.rkt" Array)
   (only-in racket/file file->bytes))
 
 (require/typed/check "jfif.rkt"

@@ -24,7 +24,7 @@
 (require
   "../base/typedefs.rkt"
   require-typed-check
-  (only-in math/array
+  (only-in "../base/math/array.rkt"
     Array
     for/array
     array-shape
