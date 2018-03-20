@@ -58,6 +58,7 @@
   (random (-> Integer Natural))
   (random-between (-> Integer Integer Integer))
   (random-from (All (A) (-> (Listof A) A)))
+  (reset! (-> Void))
 )
 
 ;; =============================================================================

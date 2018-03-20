@@ -7,6 +7,7 @@
   d20
   random-from
   random
+  reset!
 )
 
 (require
@@ -16,15 +17,16 @@
 
 ;; =============================================================================
 
-(: random (-> Integer Natural))
-(define random
-  (let* ([orig : (Listof Natural) '(2 10 24 3 0 2 10 45 2 2 2 2 49 3 1 5 1 0 0 2 1 0 2 1 0 0 2 2 5 0 0 0 3 0 1 2 0 3 0 0 2 2 0 2 2 0 0 3 0 0 2 0 3 1 0 2 0 0 1 1 0 2 0 0 3 0 0 1 2 0 3 1 0 2 0 0 0 1 3 1 1 0 1 2 0 3 2 0 1 2 0 1 1 0 2 2 0 1 1 0 2 2 0 0 0 2 1 0 0 0 0 3 4 0 0 2 1 0 2 1 0 3 1 0 1 0 0 1 0 0 1 2 0 1 0 0 2 2 0 2 2 0 3 1 0 1 0 0 1 1 0 2 1 0 3 2 0 3 0 0 2 2 0 0 0 3 4 2 0 3 0 0 3 1 0 0 3 0 4 0 0 2 0 0 2 2 0 2 1 0 0 0 3 6 1 0 3 0 0 0 2 1 3 0 0 3 1 0 1 1 0 2 0 0 3 2 0 2 1 0 1 2 0 0 3 0 2 2 0 2 2 0 2 2 0 1 1 0 3 1 0 2 1 0 1 2 0 0 2 0 3 1 0 1 1 0 2 2 0 2 2 0 1 5 3 3 2 1)]
-         [r* : (Boxof (Listof Natural)) (box orig)])
-    (lambda (n)
-      (when (null? (unbox r*))
-        (set-box! r* orig))
-      (begin0 (car (unbox r*)) (set-box! r* (cdr (unbox r*)))))))
+(define orig : (Listof Natural) '(2 10 24 3 0 2 10 45 2 2 2 2 49 3 1 5 1 0 0 2 1 0 2 1 0 0 2 2 5 0 0 0 3 0 1 2 0 3 0 0 2 2 0 2 2 0 0 3 0 0 2 0 3 1 0 2 0 0 1 1 0 2 0 0 3 0 0 1 2 0 3 1 0 2 0 0 0 1 3 1 1 0 1 2 0 3 2 0 1 2 0 1 1 0 2 2 0 1 1 0 2 2 0 0 0 2 1 0 0 0 0 3 4 0 0 2 1 0 2 1 0 3 1 0 1 0 0 1 0 0 1 2 0 1 0 0 2 2 0 2 2 0 3 1 0 1 0 0 1 1 0 2 1 0 3 2 0 3 0 0 2 2 0 0 0 3 4 2 0 3 0 0 3 1 0 0 3 0 4 0 0 2 0 0 2 2 0 2 1 0 0 0 3 6 1 0 3 0 0 0 2 1 3 0 0 3 1 0 1 1 0 2 0 0 3 2 0 2 1 0 1 2 0 0 3 0 2 2 0 2 2 0 2 2 0 1 1 0 3 1 0 2 1 0 1 2 0 0 2 0 3 1 0 1 1 0 2 2 0 2 2 0 1 5 3 3 2 1))
+(define r* : (Boxof (Listof Natural)) (box orig))
 
+(: reset! (-> Void))
+(define (reset!)
+  (set-box! r* orig))
+
+(: random (-> Integer Natural))
+(define (random n)
+  (begin0 (car (unbox r*)) (set-box! r* (cdr (unbox r*)))))
 
 (: article (->* (Boolean Boolean) (#:an? Boolean) String))
 (define (article capitalize? specific?
