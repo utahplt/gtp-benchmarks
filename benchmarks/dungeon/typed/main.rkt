@@ -466,7 +466,8 @@
 (: main (-> Void))
 (define (main)
   (for ((_i (in-range LOOPS)))
-    (show-grid (smooth-walls (generate-dungeon (range N))))))
+    (show-grid (smooth-walls (generate-dungeon (range N))))
+    (reset!)))
 
 (time (void (main)))
 ;; Change `void` to `display` to test. Should see:
