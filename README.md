@@ -13,6 +13,12 @@ Rules
 - Run for < 300 seconds in the worst case
 
 
+Dependencies
+---
+
+- `require-typed-check`
+
+
 Glossary
 ---
 
