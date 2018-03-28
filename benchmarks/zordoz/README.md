@@ -3,6 +3,11 @@ zordoz
 
 Traverses and formats bytecode structures
 
+Note `base/compiler-zo-parse.rkt` and `base/compiler-zo-structs.rkt` are from
+ the Racket 6.7 release.
+These depend on other libraries, but those are more stable and should be
+ future-proof.
+
 
 History
 ---
