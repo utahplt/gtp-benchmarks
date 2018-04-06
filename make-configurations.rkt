@@ -23,7 +23,7 @@
         u*
         (raise-argument-error 'make-configurations "typed and untyped folders have different .rkt files" "typed" t* "untyped" u*))))
   (define num-modules (length f*))
-  (define num-configs (expt num-modules 2))
+  (define num-configs (expt 2 num-modules))
   (for ((i (in-range num-configs)))
     (define cfg (natural->bitstring i #:bits num-modules))
     (define cfg-dir (format "configuration~a" cfg))
