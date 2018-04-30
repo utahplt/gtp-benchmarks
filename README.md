@@ -3,6 +3,10 @@ gtp-benchmarks
 
 Gradual Typing Performance benchmark programs.
 
+This is a collection of Racket programs.
+Each program can run in exponentially-many _configurations_ that differ in
+ terms of their type annotations.
+
 
 Overview
 ---
@@ -42,13 +46,20 @@ The semi-automatic way:
 - Go to one of the new directories, run `main.rkt`
 
 
-Rules
+Guidelines
 ---
 
-- No I/O actions during timed computation
-- Able to run all typed/untyped configurations
-- Run for 1-5 seconds when untyped or fully-typed
-- Run for < 300 seconds in the worst case
+The benchmarks try to meet the following "rock bottom" guidelines for giving
+ reproducible performance data in reasonable time:
+
+1. No I/O actions during timed computation
+2. Able to run all typed/untyped configurations
+3. Run for 1-5 seconds when untyped or fully-typed
+4. Run for < 300 seconds in the worst case
+
+Points 3 and 4 are in conflict.
+For `forth` in particular, the untyped configuration runs extremely quickly
+ but some partially-typed configurations take close to 5 minutes.
 
 
 Dependencies
@@ -57,13 +68,14 @@ Dependencies
 - `require-typed-check`
 
 
-Glossary
----
-
-[POPL 2016] = _Is Sound Gradual Typing Dead?_
-
 
 History
 ---
 
 Original development: <https://github.com/nuprl/gradual-typing-performance>
+
+Subsets / earlier-versions of these benchmarks have appeared in:
+
+- [_Is Sound Gradual Typing Dead?_](https://dl.acm.org/citation.cfm?id=2837630). Asumu Takikawa, Daniel Feltey, Ben Greenman, Max S. New, Jan Vitek, and Matthias Felleisen. POPL 2016.
+- _How to Evaluate the Performance of Gradual Type Systems_. Ben Greenman, Asumu Takikawa, Max S. New, Daniel Feltey, Robert Bruce Findler, Jan Vitek, and Matthias Felleisen. Submitted for publication.
+- [_Sound Gradual Typing: Only Mostly Dead_](https://dl.acm.org/citation.cfm?id=3133878). Spenser Bauman, Carl Friedrich Bolz-Tereick, Jeremy Siek, and Sam Tobin-Hochstadt. OOPSLA 2017.
