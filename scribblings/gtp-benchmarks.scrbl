@@ -2,6 +2,7 @@
 
 @require[
   gtp-benchmarks/scribblings/util
+  scriblib/figure
   scribble/example]
 
 @title{GTP Benchmarks}
@@ -60,6 +61,14 @@ Each benchmark comes with a short description of its behavior.
                   #:depends '((cldr untyped) (tzinfo untyped))]{
   Provides tools for manipulating calendar dates.
   The benchmark builds tens of date values and runs unit tests on these values.
+}
+@format-benchmark[#:name "jpeg"
+                  #:author "Andy Wingo"
+                  #:purpose "JPEG parsing and transformation"
+                  #:origin "https://github.com/wingo/racket-jpeg"
+                  #:depends '((math/array typed) (rnrs/bytevectors-6 untyped))]{
+  Parses a bytestream of JPEG data to an internal representation, then
+   serializes the result.
 }
 @format-benchmark[#:name "kcfa"
                   #:author "Matt Might"
@@ -182,22 +191,23 @@ Each benchmark comes with a short description of its behavior.
   The @library{compiler} library defines the bytecode data structures.
 }
 
-@;@section{Static Characteristics}
-@;
-@;@figure["fig:static-summary" @elem{Static characteristics of the benchmarks.}
-@;  @tabulate-gradual-typing-benchmarks-size[]]
-@;
-@;The table in @figure-ref{fig:static-summary} quantifies the benchmarks' size
-@;and structure.
-@;The @emph{Untyped LOC} column lists the number of non-whitespace, non-comment lines of
-@;code in the untyped version of each benchmark (computed by the @hyperlink["https://github.com/AlexKnauth/syntax-sloc"]{@tt{syntax-sloc}} library).
-@;The @emph{Annotation LOC} is the additional number of lines in the typed version
-@;of each benchmark; this estimates the number of type annotations in the typed version.
-@;The @emph{# Modules} column is the number of modules in each benchmark, and
-@;lastly the @emph{# Bnd.} and @emph{# Exp.} columns summarize the dependencies between
-@;these modules.
-@;One boundary (counted in @emph{# Bnd.}) is one import statement from one module
-@;in the benchmark to another.
-@;One export (counted in @emph{# Exp.}) is one identifier provided by one module
-@;in the benchmark.
-@;
+
+@section{Static Characteristics}
+
+@figure["fig:static-summary" @elem{Static characteristics of the benchmarks.}
+  @tabulate-gradual-typing-benchmarks-size[]]
+
+The table in @figure-ref{fig:static-summary} quantifies the benchmarks' size
+and structure.
+The @emph{Untyped LOC} column lists the number of non-whitespace, non-comment lines of
+code in the untyped version of each benchmark (computed by the @hyperlink["https://github.com/AlexKnauth/syntax-sloc"]{@tt{syntax-sloc}} library).
+The @emph{Annotation LOC} is the additional number of lines in the typed version
+of each benchmark; this estimates the number of type annotations in the typed version.
+The @emph{# Modules} column is the number of modules in each benchmark, and
+lastly the @emph{# Bnd.} and @emph{# Exp.} columns summarize the dependencies between
+these modules.
+One boundary (counted in @emph{# Bnd.}) is one import statement from one module
+in the benchmark to another.
+One export (counted in @emph{# Exp.}) is one identifier provided by one module
+in the benchmark.
+
