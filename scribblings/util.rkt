@@ -134,9 +134,7 @@
   (smaller k ": " v))
 
 (define (tabulate-gradual-typing-benchmarks-size)
-  (log-gtp-benchmarks-info "building size table (ETA 10 minutes)")
-  (define title*
-    '("Untyped LOC" "Annotation LOC" "# Modules" "# Bnd." "# Exp."))
+  (define title* '("Untyped LOC" "Annotation LOC" "# Modules" "# Bnd." "# Exp."))
   (make-size-table benchmarks-path BENCHMARK-NAME* get-gradual-typing-static-info title* "gtp-size.rktd"))
 
 (define (make-size-table dir name* benchmark->info title* file-name)
@@ -146,6 +144,7 @@
                    [*current-cache-keys* (list (lambda () benchmarks-md5*))])
       (with-cache (cachefile file-name)
         (lambda ()
+          (log-gtp-benchmarks-info "building size table (ETA 10 minutes)")
           (for/list ((bm-name (in-list name*)))
             (cons bm-name (benchmark->info bm-name)))))))
   (make-table/horizontal name->info title* values))

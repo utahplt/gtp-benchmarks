@@ -192,9 +192,11 @@ Each benchmark comes with a short description of its behavior.
 }
 
 
-@section{Static Characteristics}
+@section{Static Benchmark Details}
 
-@figure["fig:static-summary" @elem{Static characteristics of the benchmarks.}
+@subsection{Benchmark Size}
+
+@figure["fig:static-summary" @elem{Size of the benchmarks.}
   @tabulate-gradual-typing-benchmarks-size[]]
 
 The table in @figure-ref{fig:static-summary} quantifies the benchmarks' size
@@ -211,3 +213,16 @@ in the benchmark to another.
 One export (counted in @emph{# Exp.}) is one identifier provided by one module
 in the benchmark.
 
+
+@subsection{Benchmark Module Graphs}
+@; module graphs, other code from JFP
+
+
+@subsection{Benchmark Types}
+@; require-typed-check info
+
+
+@section{Dynamic Benchmark Details}
+
+@; chaperones patch, chaperone counts / info
+@; (theoretical) worst-case performance [[contract profile]]

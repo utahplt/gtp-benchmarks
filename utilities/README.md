@@ -1,5 +1,5 @@
 scripts
 ===
 
-- `make-configurations.rkt`
 - `copy-configuration.rkt`
+- `make-configurations.rkt`
