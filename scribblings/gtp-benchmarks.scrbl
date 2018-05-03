@@ -16,7 +16,16 @@ The @emph{dependencies} field lists any libraries outside the core of Racket
  and Typed Racket that the benchmarks use; we assume that programmers who
  use gradual typing cannot change the language of these libraries (the libraries
  are either typed or untyped).
-Each benchmark comes with a short description of its behavior.
+
+Each benchmark comes with a short description of its behavior,
+ a module dependence graph,
+ and the names of its @emph{migratable} and @emph{fixed} modules.
+In the module graphs, edges point from one module to another whenever one
+ module requires another.
+Nodes for migratable modules are circles --- these are the modules we apply
+ gradual typing to.
+Nodes for fixed modules are squares --- these modules are the same in all
+ configurations.
 
 @format-benchmark[#:name "acquire"
                   #:author "Matthias Felleisen"
@@ -215,11 +224,11 @@ in the benchmark.
 
 
 @subsection{Benchmark Types}
-@; require-typed-check info
+@; TODO require-typed-check info
 
 
 @section{Dynamic Benchmark Details}
 
-@; chaperones patch, chaperone counts / info
-@; (theoretical) worst-case performance [[contract profile]]
-@; `raco expand` output of worst-case versions (for the contracts)
+@; TODO chaperones patch, chaperone counts / info
+@; TODO (theoretical) worst-case performance [[contract profile]]
+@; TODo `raco expand` output of worst-case versions (for the contracts)
