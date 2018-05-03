@@ -9,6 +9,7 @@
 (require
   (only-in gtp-util
     save-pict
+    columnize
     rnd)
   (only-in gtp-util/system
     md5sum)
@@ -24,6 +25,7 @@
     make-list)
   (only-in racket/math
     pi
+    exact-ceiling
     order-of-magnitude)
   file/glob
   pict
@@ -34,6 +36,7 @@
   racket/file
   racket/path
   racket/runtime-path
+  racket/set
   racket/string
   with-cache)
 
@@ -82,20 +85,22 @@
                           #:depends lib*
                           . descr)
   (define H (linebreak))
-  (para
-    (bold name)
-    H
-    (format-author author)
-    ;; 2018-04-11 : skip the 'purpose'
-    ;; H
-    ;; (format-purpose purpose)
-    (list H (format-origin origin))
-    (linebreak)
-    (format-dependencies lib*)
-    (linebreak)
-    descr
-    (linebreak)
-    (benchmark->modulegraph-pict (string->symbol name))))
+  (nested
+    (list
+      (para
+        (bold name)
+        H
+        (format-author author)
+        ;; 2018-04-11 : skip the 'purpose'
+        ;; H
+        ;; (format-purpose purpose)
+        (list H (format-origin origin))
+        (linebreak)
+        (format-dependencies lib*)
+        (linebreak)
+        descr
+        (linebreak))
+      (benchmark->modulegraph-pict (string->symbol name)))))
 
 (define (format-author author)
   (define more-than-one? (and (pair? author) (not (null? (cdr author)))))
@@ -184,10 +189,6 @@
     (number->string x)
     (rnd x)))
 
-(module+ test
-  (check-equal? (maybe-rnd 0) "0")
-  (check-equal? (maybe-rnd 0.123) "0.12"))
-
 (define (get-gradual-typing-static-info bm-name)
   (log-gtp-benchmarks-info "collecting static info for '~a'" bm-name)
   (define src (benchmark->typed/untyped-dir bm-name))
@@ -220,10 +221,61 @@
 
 (define (benchmark->modulegraph-pict bm-name)
   (define G (benchmark->modulegraph bm-name))
-  (define-values [name-key pict] (modulegraph->pict G string<?))
-  ;; TODO something nicer with the key
-  pict
-  )
+  (define nt (modulegraph->name-table G string<? #:num-columns 4))
+  (define pict (modulegraph->pict G string<?))
+  (list
+    pict
+    (format-module-names nt)))
+
+;; format-module-names : (HashTable String Natural) -> element?
+(define (format-module-names nt)
+  (define (render-one kv)
+    (if kv
+      (format "~a. ~a" (cdr kv) (car kv))
+      ""))
+  (centered
+    (tabular
+      #:sep (hspace 2)
+      #:style 'block
+      #:row-properties '(left)
+      (for/list ((kv* (in-list nt)))
+        (for/list ((kv (in-list kv*)))
+          (smaller (render-one kv)))))))
+
+(define (modulegraph->name-table G [name<? string<?] #:num-columns [num-columns 2])
+  (define nn (modulegraph->numbered-names G name<?))
+  (define nn+ (sort (hash->list nn) < #:key cdr))
+  (rowize nn+ num-columns))
+
+(define (rowize x* num-columns)
+  (define num-in-col (exact-ceiling (/ (length x*) num-columns)))
+  (define col*
+    (let loop ((x* x*))
+      (if (null? x*)
+        '()
+        (let-values (((hd* tl*) (maybe-split-at x* num-in-col)))
+          (cons hd* (loop tl*))))))
+  (define (maybe-car x*)
+    (if (null? x*)
+      #false
+      (car x*)))
+  (define (maybe-cdr x*)
+    (if (null? x*)
+      '()
+      (cdr x*)))
+  (let loop ((col* col*))
+    (if (andmap null? col*)
+      '()
+      (cons (map maybe-car col*)
+            (loop (map maybe-cdr col*))))))
+
+(define (maybe-split-at x* n)
+  (if (zero? n)
+    (values '() x*)
+    (if (null? x*)
+      (values x* '())
+      (let-values (((a b) (maybe-split-at (cdr x*) (- n 1))))
+        (values (cons (car x*) a) b)))))
 
 (define (benchmark->modulegraph bm-name)
   (hash-ref modulegraph-cache bm-name))
@@ -258,10 +310,11 @@
 
 (define (modulegraph->externals mg)
   (define m* (modulegraph->modules mg))
-  (for*/list ((src+dst* (in-list mg))
-              (dst (in-list (cdr src+dst*)))
-              #:when (not (member dst m*)))
-    dst))
+  (set->list
+    (for*/set ((src+dst* (in-list mg))
+               (dst (in-list (cdr src+dst*)))
+               #:when (not (member dst m*)))
+      dst)))
 
 (define (modulegraph->num-boundaries mg)
   (for/sum ([src+dst* (in-list mg)])
@@ -337,36 +390,34 @@
              #:when (member k (cdr src+dst*)))
     (car src+dst*)))
 
+(define (modulegraph->numbered-names g [name<? string<?])
+  (define m* (sort (modulegraph->modules g) name<?))
+  (define e* (sort (modulegraph->externals g) name<?))
+  (for/hash ((k (in-list (append m* e*)))
+             (v (in-naturals)))
+    (values k v)))
+
 (define (modulegraph->pict mg [name<? string<?])
   (define W 20)
-  (define e* (modulegraph->externals mg))
-  (define name-key (make-hash))
   (define name->string
-    (let ([num (box 1)]
-          [oom (+ 1 (order-of-magnitude (+ (modulegraph->num-modules mg) (length e*))))])
+    (let* ([name->number (modulegraph->numbered-names mg)]
+           [max-num (hash-count name->number)]
+           [oom (+ 1 (order-of-magnitude max-num))])
       (lambda (name)
         (if name
-          (let ()
-            (define curr (unbox num))
-            (set-box! num (+ curr 1))
-            (define v (~r curr #:min-width oom #:pad-string " "))
-            (hash-set! name-key name v)
-            v)
+          (~r (hash-ref name->number name) #:min-width oom #:pad-string " ")
           #false))))
-  (define m** (modulegraph-tsort mg name<?))
+  (define m**
+    ;; m** = all module names, grouped by dependencies, order from most deps to least
+    (reverse (modulegraph-tsort mg name<?)))
   (define (level x)
     (for/first ([m* (in-list m**)]
                 [i (in-naturals 0)]
                 #:when (member x m*))
       i))
-  (define (level-diff src dst)
-    (define l-src (level src))
-    (define l-dst (level dst))
-    (if (and l-src l-dst)
-      (- (- l-dst l-src) 1)
-      0))
   (define num-cols (length m**))
   (define num-rows (apply max (map length m**)))
+  (define e* (modulegraph->externals mg))
   (define m+pict
     (for/list ([name (in-list (transpose+append (map (pad-list num-rows #false) m**)))])
       (cons name (render-module (name->string name) W))))
@@ -383,19 +434,23 @@
       (cdr r0)
       (cdr (assoc name e+pict))))
   (define grid-arr
-    (for*/fold ((acc grid+lib))
-               ((src+dst* (in-list mg))
-                (dst (in-list (cdr src+dst*))))
-      (define src (car src+dst*))
-      (define src-pict (name->pict src))
-      (define dst-pict (name->pict dst))
-      (define angle (* (/ pi 4) (level-diff dst src)))
-      (if (member dst e*)
-        (pin-arrow-line 10 acc src-pict cb-find dst-pict ct-find)
-        (pin-arrow-line 10 acc dst-pict rc-find src-pict lc-find
-                        #:start-angle (- angle)
-                        #:end-angle angle))))
-  (values name-key grid-arr))
+    (let ([arrow-size 6]
+          [angle-unit (/ (/ pi 2) num-cols)])
+      (for*/fold ((acc grid+lib))
+                 ((src+dst* (in-list mg))
+                  (dst (in-list (cdr src+dst*))))
+        (define src (car src+dst*))
+        (define src-pict (name->pict src))
+        (define dst-pict (name->pict dst))
+        (if (member dst e*)
+          (pin-arrow-line arrow-size acc src-pict cb-find dst-pict ct-find)
+          (let ([angle (* angle-unit (- (level dst) (level src) 1))])
+            (pin-arrow-line arrow-size acc src-pict rc-find dst-pict lc-find
+                            #:start-angle (- angle)
+                            #:start-pull 0.4
+                            #:end-pull 0.4
+                            #:end-angle angle))))))
+  grid-arr)
 
 (define (transpose+append x**)
   (if (null? x**)
@@ -455,7 +510,9 @@
 
 (module+ test
 
-  (require racket/set)
+  (test-case "maybe-rnd"
+    (check-equal? (maybe-rnd 0) "0")
+    (check-equal? (maybe-rnd 0.123) "0.12"))
 
   (test-case "benchmark->typed/untyped-dir"
     (check-equal? (benchmark->typed/untyped-dir 'sieve) (build-path benchmarks-path "sieve"))
@@ -478,7 +535,10 @@
     (check-equal? (modulegraph->direct-ancestor* G "A") '())
     (check-equal? (modulegraph->direct-ancestor* G "B") '("A"))
     (check-equal? (modulegraph->direct-ancestor* G "C") '("A" "B"))
-    (check-equal? (modulegraph-tsort G) '(("C" "E") ("B") ("A"))))
+    (check-equal? (modulegraph-tsort G) '(("C" "E") ("B") ("A")))
+    (define GG '(("A" "B" "C")
+                 ("B" "C")))
+    (check-equal? (modulegraph->externals GG) '("C")))
 
   (test-case "transpose+append"
     (check-equal? (transpose+append '()) '())
@@ -490,7 +550,7 @@
     (check-equal? ((pad-list 0 'X) '(A B)) '(A B))
     (check-equal? ((pad-list 5 'X) '(A B)) '(A B X X X)))
 
-  (test-case "modulegraph:real"
+  #;(test-case "modulegraph:real"
     (define (test-modulegraph bm-name expected-num-modules expected-num-boundaries expected-num-exports)
       (define mg (get-modulegraph (benchmark->typed/untyped-dir bm-name)))
       (check-equal? (modulegraph->num-modules mg) expected-num-modules)
@@ -499,17 +559,27 @@
       (void))
     (test-modulegraph 'sieve 2 1 9)
     (test-modulegraph 'morsecode 4 3 15)
-    (test-modulegraph 'snake 8 16 31)
-    (let ([g (get-modulegraph (benchmark->typed/untyped-dir 'mbta) #false)])
-      (define tu (benchmark->typed/untyped-dir 'mbta))
-      (check-equal? (modulegraph->num-modules g) 4)
-      (check-equal? (modulegraph->num-boundaries g) 4)
-      (check-equal? (modulegraph->num-externals g) 1)
-      (check-equal? (simplify-module-names g tu)
-                    '(("main.rkt" "run-t.rkt")
-                      ("run-t.rkt" "t-view.rkt")
-                      ("t-graph.rkt" "../base/my-graph.rkt")
-                      ("t-view.rkt" "t-graph.rkt")))))
+    (test-modulegraph 'snake 8 16 31))
+
+  (test-case "benchmark->modulegraph"
+    ;; depends on cache
+    (define g (benchmark->modulegraph 'mbta))
+    (define tu (benchmark->typed/untyped-dir 'mbta))
+    (check-equal? (modulegraph->num-modules g) 4)
+    (check-equal? (modulegraph->num-boundaries g) 4)
+    (check-equal? (modulegraph->num-externals g) 1)
+    (check-equal? (modulegraph->numbered-names g)
+                  #hash(("main.rkt" . 0)
+                        ("run-t.rkt" . 1)
+                        ("t-graph.rkt" . 2)
+                        ("t-view.rkt" . 3)
+                        ("../base/my-graph.rkt" . 4)))
+    (define nt (modulegraph->name-table g))
+    (check-equal? nt
+                  '((("main.rkt" . 0) ("t-view.rkt" . 3))
+                    (("run-t.rkt" . 1) ("../base/my-graph.rkt" . 4))
+                    (("t-graph.rkt" . 2) #false)))
+    (check-pred values (format-module-names nt)))
 
   (test-case "complete-path->imported-modules"
     (let ([sieve-main (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "main.rkt")]
@@ -544,4 +614,22 @@
       (check-equal? (hash-ref zi "# Modules") 4)
       (check-equal? (hash-ref zi "# Bnd.") 3)
       (check-equal? (hash-ref zi "# Exp.") 15)))
+
+  (test-case "rowize"
+    (check-equal? (rowize '(A B C D E F) 2) '((A D) (B E) (C F)))
+    (check-equal? (rowize '(A B C) 2) '((A C) (B #f))))
+
+  (test-case "maybe-split-at"
+    (let-values (((a b) (maybe-split-at '() 0)))
+      (check-equal? a '())
+      (check-equal? b '()))
+    (let-values (((a b) (maybe-split-at '(A B C) 1)))
+      (check-equal? a '(A))
+      (check-equal? b '(B C)))
+    (let-values (((a b) (maybe-split-at '(A B C) 4)))
+      (check-equal? a '(A B C))
+      (check-equal? b '())))
+
+(benchmark->modulegraph-pict 'kcfa)
+
 )

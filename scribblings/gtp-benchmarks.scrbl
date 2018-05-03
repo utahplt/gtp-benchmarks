@@ -214,10 +214,6 @@ One export (counted in @emph{# Exp.}) is one identifier provided by one module
 in the benchmark.
 
 
-@subsection{Benchmark Module Graphs}
-@; module graphs, other code from JFP --- TODO represent libraries in modulegraphs!
-
-
 @subsection{Benchmark Types}
 @; require-typed-check info
 
