@@ -19,8 +19,6 @@
     format-url)
   (only-in racket/format
     ~r)
-  (only-in syntax/modresolve
-    resolve-module-path)
   (only-in racket/list
     make-list)
   (only-in racket/math
@@ -28,6 +26,7 @@
     exact-ceiling
     order-of-magnitude)
   file/glob
+  gtp-benchmarks/utilities/modulegraph
   pict
   syntax-sloc/directory-sloc
   scribble/manual
@@ -36,7 +35,6 @@
   racket/file
   racket/path
   racket/runtime-path
-  racket/set
   racket/string
   with-cache)
 
@@ -199,13 +197,13 @@
       (when (< diff 0)
         (printf "warning: '~a' untyped LOC is greater than typed LOC (~a vs. ~a)~n" bm-name u-loc t-loc))
       diff))
-  (define g (get-modulegraph src #true))
+  (define g (get-modulegraph src))
   (make-immutable-hash
     (list (cons "Untyped LOC" u-loc)
           (cons "Annotation LOC" a-loc)
           (cons "# Modules" (modulegraph->num-modules g))
-          (cons "# Bnd." (modulegraph->num-boundaries g))
-          (cons "# Exp." (modulegraph->num-exports g)))))
+          (cons "# Bnd." (modulegraph->num-internal-boundaries g))
+          (cons "# Exp." (modulegraph->num-internal-exports g)))))
 
 (define (benchmark->typed/untyped-dir bm-name)
   (define src (build-path benchmarks-path (symbol->string bm-name)))
@@ -221,7 +219,7 @@
 
 (define (benchmark->modulegraph-pict bm-name)
   (define G (benchmark->modulegraph bm-name))
-  (define nt (modulegraph->name-table G string<? #:num-columns 4))
+  (define nt (modulegraph->name-table G #:node<? string<? #:num-columns 4))
   (define pict (modulegraph->pict G string<?))
   (list
     pict
@@ -242,8 +240,8 @@
         (for/list ((kv (in-list kv*)))
           (smaller (render-one kv)))))))
 
-(define (modulegraph->name-table G [name<? string<?] #:num-columns [num-columns 2])
-  (define nn (modulegraph->numbered-names G name<?))
+(define (modulegraph->name-table G #:node<? [name<? string<?] #:num-columns [num-columns 2])
+  (define nn (modulegraph->numbered-names G #:node<? name<?))
   (define nn+ (sort (hash->list nn) < #:key cdr))
   (rowize nn+ num-columns))
 
@@ -280,123 +278,6 @@
 (define (benchmark->modulegraph bm-name)
   (hash-ref modulegraph-cache bm-name))
 
-(define (get-modulegraph src [only-in-project? #true])
-  (void
-    (clean-directory src))
-  (define udir (build-path src untyped-name))
-  (define mod* (glob (build-path udir "*.rkt")))
-  (define in-project?
-    (if only-in-project?
-      (lambda (path) (and (member path mod*) #true))
-      (lambda (path) #true)))
-  (for/list ([src (in-list mod*)])
-    (define dst* (complete-path->imported-modules src))
-    (cons src (filter in-project? dst*))))
-
-(define (clean-directory dir)
-  (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
-  ;; TODO can also do `(setup #:clean? #true ....)` from `setup/setup`
-  (for ((d (in-list (glob (build-path dir "**" compiled-name)))))
-    (delete-directory/files d #:must-exist? #false)))
-
-(define (modulegraph->num-modules mg)
-  (length (modulegraph->modules mg)))
-
-(define (modulegraph->modules mg)
-  (map car mg))
-
-(define (modulegraph->num-externals mg)
-  (length (modulegraph->externals mg)))
-
-(define (modulegraph->externals mg)
-  (define m* (modulegraph->modules mg))
-  (set->list
-    (for*/set ((src+dst* (in-list mg))
-               (dst (in-list (cdr src+dst*)))
-               #:when (not (member dst m*)))
-      dst)))
-
-(define (modulegraph->num-boundaries mg)
-  (for/sum ([src+dst* (in-list mg)])
-    (length (cdr src+dst*))))
-
-(define (modulegraph->num-exports mg)
-  (for/sum ([src+dst* (in-list mg)])
-    (length (complete-path->exported-identifiers (car src+dst*)))))
-
-(define (complete-path->imported-modules path)
-  (define parent-dir (path-only path))
-  (define all-imports
-    (with-visit-namespace path module->imports))
-  (let loop ([imp* all-imports])
-    (if (null? imp*)
-      '()
-      (let ()
-        (define mpi-name*
-          (for/list ([x (in-list (car imp*))]
-                     #:when (module-path-index? x))
-            (define-values [name _] (module-path-index-split x))
-            name))
-        (append (for/list ([mpi-name (in-list mpi-name*)]
-                           #:when (string? mpi-name))
-                  (build-path parent-dir mpi-name))
-                (loop (cdr imp*)))))))
-
-(define (complete-path->exported-identifiers path)
-  (define-values [p* s*]
-    (with-visit-namespace path module->exports))
-  (append (parse-provided p*) (parse-provided s*)))
-
-(define (with-visit-namespace path f)
-  (define r (resolve-module-path path #false))
-  (parameterize ((current-namespace (make-base-namespace)))
-    (dynamic-require r (void))
-    (f r)))
-
-(define (parse-provided x*)
-  (apply append
-    (for/list ([x (in-list x*)]
-               #:when (and (car x) (zero? (car x))))
-      (map car (cdr x)))))
-
-(define (modulegraph-tsort adj [name<? string<?])
-  (define m* (modulegraph->modules adj))
-  (define indegree-map
-    (make-hash (for/list ([src+dst* (in-list adj)])
-                 (cons (car src+dst*)
-                       (for/sum ((dst (in-list (cdr src+dst*)))
-                                 #:when (member dst m*))
-                         1)))))
-  (reverse
-    (let loop ([acc '()])
-      (cond
-       [(zero? (hash-count indegree-map))
-        acc]
-       [else
-        (define zero-indegree*
-          (for/list ([(k v) (in-hash indegree-map)]
-                     #:when (zero? v)) k))
-        (for ([k (in-list zero-indegree*)])
-          (hash-remove! indegree-map k)
-          (define src* (modulegraph->direct-ancestor* adj k))
-          (for ([src (in-list src*)])
-            (hash-set! indegree-map src
-              (- (hash-ref indegree-map src (lambda () -1)) 1))))
-            ;(hash-update! indegree-map src sub1 -1)))
-        (loop (cons (sort zero-indegree* name<?) acc))]))))
-
-(define (modulegraph->direct-ancestor* mg k)
-  (for/list ([src+dst* (in-list mg)]
-             #:when (member k (cdr src+dst*)))
-    (car src+dst*)))
-
-(define (modulegraph->numbered-names g [name<? string<?])
-  (define m* (sort (modulegraph->modules g) name<?))
-  (define e* (sort (modulegraph->externals g) name<?))
-  (for/hash ((k (in-list (append m* e*)))
-             (v (in-naturals)))
-    (values k v)))
-
 (define (modulegraph->pict mg [name<? string<?])
   (define W 20)
   (define name->string
@@ -409,7 +290,7 @@
           #false))))
   (define m**
     ;; m** = all module names, grouped by dependencies, order from most deps to least
-    (reverse (modulegraph-tsort mg name<?)))
+    (reverse (modulegraph-tsort mg #:node<? name<?)))
   (define (level x)
     (for/first ([m* (in-list m**)]
                 [i (in-naturals 0)]
@@ -495,6 +376,18 @@
     (substring str-m (+ 1 (string-length str-base)))
     str-m))
 
+(define (get-modulegraph src)
+  (void
+    (clean-directory src))
+  (define udir (build-path src untyped-name))
+  (directory->modulegraph udir))
+
+(define (clean-directory dir)
+  (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
+  ;; TODO can also do `(setup #:clean? #true ....)` from `setup/setup`
+  (for ((d (in-list (glob (build-path dir "**" compiled-name)))))
+    (delete-directory/files d #:must-exist? #false)))
+
 (define modulegraph-cache
   (parameterize ([*with-cache-fasl?* #false]
                  [*current-cache-directory* cache-path]
@@ -503,12 +396,14 @@
       (lambda ()
         (for/hash ((bm (in-list BENCHMARK-NAME*)))
           (define tu (benchmark->typed/untyped-dir bm))
-          (define G (get-modulegraph tu #false))
+          (define G (get-modulegraph tu))
           (values bm (simplify-module-names G tu)))))))
 
 ;; =============================================================================
 
 (module+ test
+
+  (require racket/set)
 
   (test-case "maybe-rnd"
     (check-equal? (maybe-rnd 0) "0")
@@ -524,22 +419,6 @@
   (test-case "get-typed-loc"
     (check-equal? (get-typed-loc (benchmark->typed/untyped-dir 'dungeon)) 610))
 
-  (test-case "modulegraph:synthetic"
-    (define G '(("A" "B" "C")
-                ("B" "C" "D")
-                ("C")
-                ("E")))
-    (check-equal? (modulegraph->modules G) '("A" "B" "C" "E"))
-    (check-equal? (modulegraph->num-boundaries G) 4)
-    (check-equal? (modulegraph->externals G) '("D"))
-    (check-equal? (modulegraph->direct-ancestor* G "A") '())
-    (check-equal? (modulegraph->direct-ancestor* G "B") '("A"))
-    (check-equal? (modulegraph->direct-ancestor* G "C") '("A" "B"))
-    (check-equal? (modulegraph-tsort G) '(("C" "E") ("B") ("A")))
-    (define GG '(("A" "B" "C")
-                 ("B" "C")))
-    (check-equal? (modulegraph->externals GG) '("C")))
-
   (test-case "transpose+append"
     (check-equal? (transpose+append '()) '())
     (check-equal? (transpose+append '((A) (B) (C))) '(A B C))
@@ -550,12 +429,12 @@
     (check-equal? ((pad-list 0 'X) '(A B)) '(A B))
     (check-equal? ((pad-list 5 'X) '(A B)) '(A B X X X)))
 
-  #;(test-case "modulegraph:real"
+  (test-case "modulegraph:real"
     (define (test-modulegraph bm-name expected-num-modules expected-num-boundaries expected-num-exports)
       (define mg (get-modulegraph (benchmark->typed/untyped-dir bm-name)))
       (check-equal? (modulegraph->num-modules mg) expected-num-modules)
-      (check-equal? (modulegraph->num-boundaries mg) expected-num-boundaries)
-      (check-equal? (modulegraph->num-exports mg) expected-num-exports)
+      (check-equal? (modulegraph->num-internal-boundaries mg) expected-num-boundaries)
+      (check-equal? (modulegraph->num-internal-exports mg) expected-num-exports)
       (void))
     (test-modulegraph 'sieve 2 1 9)
     (test-modulegraph 'morsecode 4 3 15)
@@ -566,7 +445,7 @@
     (define g (benchmark->modulegraph 'mbta))
     (define tu (benchmark->typed/untyped-dir 'mbta))
     (check-equal? (modulegraph->num-modules g) 4)
-    (check-equal? (modulegraph->num-boundaries g) 4)
+    (check-equal? (modulegraph->num-internal-boundaries g) 3)
     (check-equal? (modulegraph->num-externals g) 1)
     (check-equal? (modulegraph->numbered-names g)
                   #hash(("main.rkt" . 0)
@@ -580,17 +459,6 @@
                     (("run-t.rkt" . 1) ("../base/my-graph.rkt" . 4))
                     (("t-graph.rkt" . 2) #false)))
     (check-pred values (format-module-names nt)))
-
-  (test-case "complete-path->imported-modules"
-    (let ([sieve-main (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "main.rkt")]
-          [sieve-streams (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "streams.rkt")])
-      (check-equal? (complete-path->imported-modules sieve-main) (list sieve-streams))))
-
-  (test-case "complete-path->exported-identifiers"
-    (let* ([sieve-streams (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "streams.rkt")]
-           [exp* (complete-path->exported-identifiers sieve-streams)])
-      (check set=? exp*
-             '(make-stream stream-first stream-get stream-rest stream-take stream-unfold stream? struct:stream stream))))
 
   (test-case "directory->md5*"
     (let ([sieve (build-path benchmarks-path "sieve")])
@@ -630,6 +498,16 @@
       (check-equal? a '(A B C))
       (check-equal? b '())))
 
-(benchmark->modulegraph-pict 'kcfa)
+  (test-case "complete-path->imported-modules"
+    (let ([sieve-main (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "main.rkt")]
+          [sieve-streams (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "streams.rkt")])
+      (check-equal? (complete-path->imported-modules sieve-main) (list sieve-streams))))
+
+  (test-case "complete-path->exported-identifiers"
+    (let* ([sieve-streams (build-path (benchmark->typed/untyped-dir 'sieve) untyped-name "streams.rkt")]
+           [exp* (complete-path->exported-identifiers sieve-streams)])
+      (check set=? exp*
+             '(make-stream stream-first stream-get stream-rest stream-take stream-unfold stream? struct:stream stream))))
+
 
 )
