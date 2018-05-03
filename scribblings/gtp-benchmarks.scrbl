@@ -215,7 +215,7 @@ in the benchmark.
 
 
 @subsection{Benchmark Module Graphs}
-@; module graphs, other code from JFP
+@; module graphs, other code from JFP --- TODO represent libraries in modulegraphs!
 
 
 @subsection{Benchmark Types}
@@ -226,3 +226,4 @@ in the benchmark.
 
 @; chaperones patch, chaperone counts / info
 @; (theoretical) worst-case performance [[contract profile]]
+@; `raco expand` output of worst-case versions (for the contracts)
