@@ -9,8 +9,8 @@
   complete-path->exported-identifiers
 
   (contract-out
-    (directory->modulegraph
-      (-> path-string? modulegraph?))
+    (make-modulegraph
+      (-> (listof path-string?) modulegraph?))
     (modulegraph->num-modules
       (-> modulegraph? natural?))
     (modulegraph->modules
@@ -33,7 +33,6 @@
 (require
   (only-in syntax/modresolve
     resolve-module-path)
-  file/glob
   racket/path
   racket/set
   racket/math)
@@ -49,8 +48,7 @@
 (define numbered-names/c
   (hash/c any/c natural? #:immutable #true #:flat? #true))
 
-(define (directory->modulegraph udir)
-  (define mod* (glob (build-path udir "*.rkt")))
+(define (make-modulegraph mod*)
   (for/list ([src (in-list mod*)])
     (define dst* (complete-path->imported-modules src))
     (cons src dst*)))
@@ -125,19 +123,21 @@
   (define parent-dir (path-only path))
   (define all-imports
     (with-visit-namespace path module->imports))
-  (let loop ([imp* all-imports])
-    (if (null? imp*)
-      '()
-      (let ()
-        (define mpi-name*
-          (for/list ([x (in-list (car imp*))]
-                     #:when (module-path-index? x))
-            (define-values [name _] (module-path-index-split x))
-            name))
-        (append (for/list ([mpi-name (in-list mpi-name*)]
-                           #:when (string? mpi-name))
-                  (build-path parent-dir mpi-name))
-                (loop (cdr imp*)))))))
+  (set->list
+    (let loop ([imp* all-imports])
+      (if (null? imp*)
+        (set)
+        (let ()
+          (define mpi-name*
+            (for/list ([x (in-list (car imp*))]
+                       #:when (module-path-index? x))
+              (define-values [name _] (module-path-index-split x))
+              name))
+          (set-union
+            (for/set ([mpi-name (in-list mpi-name*)]
+                      #:when (string? mpi-name))
+              (build-path parent-dir mpi-name))
+            (loop (cdr imp*))))))))
 
 (define (complete-path->exported-identifiers path)
   (define-values [p* s*]
