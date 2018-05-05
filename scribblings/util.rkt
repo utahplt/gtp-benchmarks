@@ -308,7 +308,11 @@
     (for/list ([e (in-list e*)])
       (cons e (render-external (name->string e) W))))
   (define grid+lib
-    (vc-append W grid-base (apply hc-append W (map cdr e+pict))))
+    (vc-append W
+               grid-base
+               (if (null? e+pict)
+                 (blank 0 W)
+                 (apply hc-append W (map cdr e+pict)))))
   (define (name->pict name)
     (define r0 (assoc name m+pict))
     (if r0
@@ -373,14 +377,19 @@
   (define str-base (path->string (simplify-path base)))
   (define str-m (path->string m))
   (if (string-prefix? str-m str-base)
-    (substring str-m (+ 1 (string-length str-base)))
+    (substring str-m (+ (string-length str-base) (if (directory-string? str-base) 1 0)))
     str-m))
+
+(define (directory-string? str)
+  (define L (string-length str))
+  (and (< 0 L)
+       (eq? #\\ (string-ref str (- L 1)))))
 
 (define (get-modulegraph src)
   (void
     (clean-directory src))
   (define udir (build-path src untyped-name))
-  (directory->modulegraph udir))
+  (make-modulegraph (glob (build-path udir "*.rkt"))))
 
 (define (clean-directory dir)
   (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
