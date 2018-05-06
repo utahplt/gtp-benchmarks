@@ -407,11 +407,13 @@
   (and (< 0 L)
        (eq? #\\ (string-ref str (- L 1)))))
 
-(define (get-modulegraph src)
+(define (get-modulegraph tu-dir)
   (void
-    (clean-directory! src))
-  (define udir (build-path src untyped-name))
-  (make-modulegraph (glob (build-path udir "*.rkt"))))
+    (setup-untyped-configuration! tu-dir)
+    (clean-directory! staging-path))
+  (begin0
+    (make-modulegraph (glob (build-path staging/config-path "*.rkt")))
+    (clean-staging!)))
 
 (define (clean-directory! dir)
   (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
@@ -419,13 +421,39 @@
   (for ((d (in-list (glob (build-path dir "**" compiled-name)))))
     (delete-directory/files d #:must-exist? #false)))
 
+(define (setup-typed-configuration! tu-dir)
+  (setup-configuration! tu-dir typed-name))
+
+(define (setup-untyped-configuration! tu-dir)
+  (setup-configuration! tu-dir untyped-name))
+
+(define (setup-configuration! tu-dir x-name)
+  (define x-dir (build-path tu-dir x-name))
+  (define base-dir (build-path tu-dir base-name))
+  (define both-dir (build-path tu-dir both-name))
+  (void
+    (copy-racket-file* x-dir staging/config-path))
+  (when (directory-exists? base-dir)
+    (copy-directory/files* base-dir staging/base-path))
+  (when (directory-exists? both-dir)
+    (copy-file* both-dir staging/config-path))
+  (void))
+
+(define (clean-staging!)
+  (for ((dir (in-list (list staging/base-path staging/config-path))))
+    (for ((fn (in-glob (build-path dir "*")))
+          #:unless (bytes=? (path->bytes (file-name-from-path fn)) #"README.md"))
+      (delete-directory/files fn))))
+
 (define modulegraph-cache
   (parameterize ([*with-cache-fasl?* #false]
                  [*current-cache-directory* cache-path]
                  [*current-cache-keys* (list (lambda () benchmarks-md5*))])
     (with-cache (cachefile "modulegraph.rktd")
       (lambda ()
+        (log-gtp-benchmarks-info "collecting module graphs (ETA 30 minutes)")
         (for/hash ((bm (in-list BENCHMARK-NAME*)))
+          (log-gtp-benchmarks-info "collecting module graph for ~a" bm)
           (define tu (benchmark->typed/untyped-dir bm))
           (define G (get-modulegraph tu))
           (values bm (simplify-module-names G tu)))))))
@@ -475,30 +503,6 @@
                             (compile/require-typed-check-info (build-path staging/config-path main-name)))
                           clean-staging!))
           (cons bm-name rtc*))))))
-
-(define (setup-typed-configuration! tu-dir)
-  (setup-configuration! tu-dir typed-name))
-
-(define (setup-untyped-configuration! tu-dir)
-  (setup-configuration! tu-dir untyped-name))
-
-(define (setup-configuration! tu-dir x-name)
-  (define x-dir (build-path tu-dir x-name))
-  (define base-dir (build-path tu-dir base-name))
-  (define both-dir (build-path tu-dir both-name))
-  (void
-    (copy-racket-file* x-dir staging/config-path))
-  (when (directory-exists? base-dir)
-    (copy-directory/files* base-dir staging/base-path))
-  (when (directory-exists? both-dir)
-    (copy-file* both-dir staging/config-path))
-  (void))
-
-(define (clean-staging!)
-  (for ((dir (in-list (list staging/base-path staging/config-path))))
-    (for ((fn (in-glob (build-path dir "*")))
-          #:unless (bytes=? (path->bytes (file-name-from-path fn)) #"README.md"))
-      (delete-directory/files fn))))
 
 ;; =============================================================================
 
