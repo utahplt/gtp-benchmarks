@@ -3,7 +3,11 @@
 @require[
   gtp-benchmarks/scribblings/util
   scriblib/figure
-  scribble/example]
+  scribble/example
+  (for-label
+    require-typed-check
+    racket/base
+    (only-in typed/racket/base require/typed))]
 
 @title{GTP Benchmarks}
 
@@ -224,7 +228,32 @@ in the benchmark.
 
 
 @subsection{Benchmark Types}
-@; TODO require-typed-check info
+
+This section contains the source code for each boundary between modules in
+ the benchmarks.
+The data format is:
+
+@nested[#:style 'inset
+  @list[@bold{benchmark name}
+        @linebreak[]
+        @emph{importing module}
+        @linebreak[]
+        @verbatim{'(require-typed-check exporting-module ...)}]]
+
+In other words, the data below shows the @racket[require/typed/check] forms
+ for each module in each benchmark.
+
+Depending on the configuration, a @racket[require/typed/check] expands to
+ either a @racket[require] or a @racket[require/typed] form.
+The latter form compiles types to contracts; these contracts are the reason
+ why some configurations run slower than others.
+In this way, the types below give an idea of the kind of overhead each benchmark
+ may suffer from.
+
+Note: the data below may refer to type aliases.
+See the source code for each benchmark to find what the aliases stand for.
+
+@format-require-typed-check-info[]
 
 
 
