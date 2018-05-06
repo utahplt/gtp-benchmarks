@@ -27,7 +27,7 @@ Nodes for migratable modules are circles --- these are the modules we apply
 Nodes for fixed modules are squares --- these modules are the same in all
  configurations.
 
-@format-benchmark[#:name "acquire"
+@format-benchmark[#:name 'acquire
                   #:author "Matthias Felleisen"
                   #:purpose "Game"
                   #:origin "https://github.com/mfelleisen/Acquire"
@@ -37,7 +37,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   The players send messages to an administrator object; the administrator
    enforces the rules of the game.
 }
-@format-benchmark[#:name "dungeon"
+@format-benchmark[#:name 'dungeon
                   #:author "Vincent St-Amour"
                   #:purpose "Maze generator"
                   #:origin #f
@@ -45,7 +45,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Builds a maze of wall and floor objects by drawing first-class classes from
    a list.
 }
-@format-benchmark[#:name "forth"
+@format-benchmark[#:name 'forth
                   #:author "Ben Greenman"
                   #:purpose "Interpreter"
                   #:origin "https://github.com/bennn/forth"
@@ -53,7 +53,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Interprets Forth programs.
   The interpreter represents calculator commands as a list of first-class objects.
 }
-@format-benchmark[#:name "fsm"
+@format-benchmark[#:name 'fsm
                   #:author "Linh Chi Nguyen"
                   #:purpose "Economy Simulator"
                   #:origin "https://github.com/ayaderaghul/sample-fsm"
@@ -63,7 +63,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   The economy is implemented as a vector; this vector repeatedly crosses between
   modules in the benchmark.
 }
-@format-benchmark[#:name "gregor"
+@format-benchmark[#:name 'gregor
                   #:author "Jon Zeppieri"
                   #:purpose "Date and time library"
                   #:origin "https://github.com/97jaz/gregor"
@@ -71,7 +71,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Provides tools for manipulating calendar dates.
   The benchmark builds tens of date values and runs unit tests on these values.
 }
-@format-benchmark[#:name "jpeg"
+@format-benchmark[#:name 'jpeg
                   #:author "Andy Wingo"
                   #:purpose "JPEG parsing and transformation"
                   #:origin "https://github.com/wingo/racket-jpeg"
@@ -79,7 +79,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Parses a bytestream of JPEG data to an internal representation, then
    serializes the result.
 }
-@format-benchmark[#:name "kcfa"
+@format-benchmark[#:name 'kcfa
                   #:author "Matt Might"
                   #:purpose "Explanation of k-CFA"
                   #:origin "http://matt.might.net/articles/implementation-of-kcfa-and-0cfa/"
@@ -87,7 +87,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Performs 2-CFA on a lambda calculus equation built from Church numerals;
   specifically, it analyzes an encoding of @tt{(2 * (1 + 3)) = (1 * 2)}.
 }
-@format-benchmark[#:name "lnm"
+@format-benchmark[#:name 'lnm
                   #:author "Ben Greenman"
                   #:purpose "Graphing"
                   #:origin "https://github.com/nuprl/gradual-typing-performance/tree/master/paper/popl-2016/scripts"
@@ -96,7 +96,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Two modules in this benchmark are tightly-coupled to Typed Racket libraries;
    typing both modules improves performance.
 }
-@format-benchmark[#:name "mbta"
+@format-benchmark[#:name 'mbta
                   #:author "Matthias Felleisen"
                   #:purpose "Interactive map"
                   #:origin #f
@@ -106,7 +106,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
    when the map is typed, the boundary to @library{graph} is a
    performance bottleneck.
 }
-@format-benchmark[#:name "morsecode"
+@format-benchmark[#:name 'morsecode
                   #:author '("John B. Clements" "Neil Van Dyke")
                   #:purpose "Morse code trainer"
                   #:origin "https://github.com/jbclements/morse-code-trainer/tree/master/morse-code-trainer"
@@ -114,7 +114,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Computes Levenshtein distances and morse code translations for a
   sequence of pairs of words.
 }
-@format-benchmark[#:name "quadBG"
+@format-benchmark[#:name 'quadBG
                   #:author "Ben Greenman"
                   #:purpose "Typesetting"
                   #:origin "https://github.com/mbutterick/quad"
@@ -124,7 +124,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   choice of type annotations; the types that @bm{quadBG} uses to describe its
   input correspond to flat contracts.
 }
-@format-benchmark[#:name "quadMB"
+@format-benchmark[#:name 'quadMB
                   #:author "Matthew Butterick"
                   #:purpose "Typesetting"
                   #:origin "https://github.com/mbutterick/quad"
@@ -135,14 +135,14 @@ Nodes for fixed modules are squares --- these modules are the same in all
   its types) to guide control flow, whereas the untyped version uses flat
   predicates.
 }
-@format-benchmark[#:name "sieve"
+@format-benchmark[#:name 'sieve
                   #:author "Ben Greenman"
                   #:purpose "Generate prime numbers"
                   #:origin "https://github.com/nuprl/gradual-typing-performance/tree/master/benchmarks/sieve"
                   #:depends '()]{
   Computes prime numbers using a stream library.
 }
-@format-benchmark[#:name "snake"
+@format-benchmark[#:name 'snake
                   #:author "David Van Horn"
                   #:purpose "Game"
                   #:origin "https://github.com/philnguyen/soft-contract"
@@ -150,14 +150,14 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Functional program that implements the Snake game.
   The benchmark folds over a sequence of game moves.
 }
-@format-benchmark[#:name "suffixtree"
+@format-benchmark[#:name 'suffixtree
                   #:author "Danny Yoo"
                   #:purpose "Ukkonen's suffix tree algorithm"
                   #:origin "https://github.com/dyoo/suffixtree"
                   #:depends '()]{
   Computes longest common subsequences between strings.
 }
-@format-benchmark[#:name "synth"
+@format-benchmark[#:name 'synth
                   #:author "Vincent St. Amour & Neil Toronto"
                   #:purpose "Music synthesizer"
                   #:origin "http://github.com/stamourv/synth"
@@ -166,7 +166,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   This benchmark creates a large number of vectors (to represent notes)
   but rarely reads from the vectors.
 }
-@format-benchmark[#:name "take5"
+@format-benchmark[#:name 'take5
                   #:author "Matthias Felleisen"
                   #:purpose "Game"
                   #:origin "https://github.com/mfelleisen/take5"
@@ -174,7 +174,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Simulates a card game between player objects.
   The players communicate through a dealer object.
 }
-@format-benchmark[#:name "tetris"
+@format-benchmark[#:name 'tetris
                   #:author "David Van Horn"
                   #:purpose "Game"
                   #:origin "https://github.com/philnguyen/soft-contract"
@@ -182,7 +182,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   Functional implementation of Tetris; the benchmark replays a pre-recorded
   sequence of moves.
 }
-@format-benchmark[#:name "zombie"
+@format-benchmark[#:name 'zombie
                   #:author "David Van Horn"
                   #:purpose "Game"
                   #:origin "https://github.com/philnguyen/soft-contract"
@@ -191,7 +191,7 @@ Nodes for fixed modules are squares --- these modules are the same in all
   This benchmark uses an encoding of objects as higher-order functions to implement
   the game player, the enemies, and the board.
 }
-@format-benchmark[#:name "zordoz"
+@format-benchmark[#:name 'zordoz
                   #:author "Ben Greenman"
                   #:purpose "Bytecode explorer"
                   #:origin "http://github.com/bennn/zordoz"
@@ -225,6 +225,7 @@ in the benchmark.
 
 @subsection{Benchmark Types}
 @; TODO require-typed-check info
+
 
 
 @section{Dynamic Benchmark Details}

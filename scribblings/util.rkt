@@ -86,7 +86,7 @@
   (nested
     (list
       (para
-        (bold name)
+        (bold (symbol->string name))
         H
         (format-author author)
         ;; 2018-04-11 : skip the 'purpose'
@@ -98,7 +98,7 @@
         (linebreak)
         descr
         (linebreak))
-      (benchmark->modulegraph-pict (string->symbol name)))))
+      (benchmark->modulegraph-pict name))))
 
 (define (format-author author)
   (define more-than-one? (and (pair? author) (not (null? (cdr author)))))
