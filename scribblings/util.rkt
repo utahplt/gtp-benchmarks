@@ -2,15 +2,20 @@
 
 (provide
   format-benchmark
+  format-require-typed-check-info
   library
   bm
   tabulate-gradual-typing-benchmarks-size)
 
 (require
+  require-typed-check/private/log
   (only-in gtp-util
     save-pict
     columnize
-    rnd)
+    rnd
+    copy-file*
+    copy-directory/files*
+    copy-racket-file*)
   (only-in gtp-util/system
     md5sum)
   (only-in scribble-abbrevs
@@ -18,6 +23,7 @@
     integer->word
     format-url)
   (only-in racket/format
+    ~a
     ~r)
   (only-in racket/list
     make-list)
@@ -25,8 +31,11 @@
     pi
     exact-ceiling
     order-of-magnitude)
+  (only-in racket/pretty
+    pretty-format)
   file/glob
   gtp-benchmarks/utilities/modulegraph
+  gtp-benchmarks/utilities/type-info
   pict
   syntax-sloc/directory-sloc
   scribble/manual
@@ -35,6 +44,7 @@
   racket/file
   racket/path
   racket/runtime-path
+  racket/set
   racket/string
   with-cache)
 
@@ -53,6 +63,19 @@
 (define compiled-name "compiled")
 (define base-name "base")
 (define both-name "both")
+(define config-name "configuration")
+(define main-name "main.rkt")
+(define staging-name "staging")
+
+(define staging-path (build-path cache-path staging-name))
+(define staging/base-path (build-path staging-path base-name))
+(define staging/config-path (build-path staging-path config-name))
+
+(module+ test
+  (test-case "staging-path"
+    (check-pred directory-exists? staging-path)
+    (check-pred directory-exists? staging/base-path)
+    (check-pred directory-exists? staging/config-path)))
 
 (define-logger gtp-benchmarks)
 
@@ -83,22 +106,20 @@
                           #:depends lib*
                           . descr)
   (define H (linebreak))
-  (nested
-    (list
-      (para
-        (bold (symbol->string name))
-        H
-        (format-author author)
-        ;; 2018-04-11 : skip the 'purpose'
-        ;; H
-        ;; (format-purpose purpose)
-        (list H (format-origin origin))
-        (linebreak)
-        (format-dependencies lib*)
-        (linebreak)
-        descr
-        (linebreak))
-      (benchmark->modulegraph-pict name))))
+  (list
+    (subsection (format "~a Description" name))
+    H
+    (format-author author)
+    ;; 2018-04-11 : skip the 'purpose'
+    ;; H
+    ;; (format-purpose purpose)
+    (list H (format-origin origin))
+    (linebreak)
+    (format-dependencies lib*)
+    (linebreak)
+    descr
+    (linebreak)
+    (benchmark->modulegraph-pict name)))
 
 (define (format-author author)
   (define more-than-one? (and (pair? author) (not (null? (cdr author)))))
@@ -135,12 +156,13 @@
       (define str (if (symbol? x) (symbol->string x) x))
       (define match (assoc str lib/url))
       (list
-        (if match
-          (hyperlink (cadr match) (tt str))
-          (begin
-            (printf "warning: no URL for library ~a~n" str)
-            (tt str)))
-        (format " (~a)" t)))))
+        (smaller
+          (if match
+            (hyperlink (cadr match) (tt str))
+            (begin
+              (printf "warning: no URL for library ~a~n" str)
+              (tt str))))
+        (smaller (format " (~a)" t))))))
 
 (define (remove-prefix rx str)
   (define m (regexp-match (string-append "^" rx "(.*)$") str))
@@ -387,11 +409,11 @@
 
 (define (get-modulegraph src)
   (void
-    (clean-directory src))
+    (clean-directory! src))
   (define udir (build-path src untyped-name))
   (make-modulegraph (glob (build-path udir "*.rkt"))))
 
-(define (clean-directory dir)
+(define (clean-directory! dir)
   (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
   ;; TODO can also do `(setup #:clean? #true ....)` from `setup/setup`
   (for ((d (in-list (glob (build-path dir "**" compiled-name)))))
@@ -408,11 +430,79 @@
           (define G (get-modulegraph tu))
           (values bm (simplify-module-names G tu)))))))
 
+(define (format-require-typed-check-info)
+  (define bm+rtc* (get-require-typed-check-info))
+  (for/list ([bm+rtc (in-list bm+rtc*)])
+    (list
+      (subsubsection (format "~a Boundary Types" (car bm+rtc)))
+      (linebreak)
+      (format-rtc-info* (cdr bm+rtc)))))
+
+(define (format-rtc-info* rtc*)
+  (define seen (mutable-set))
+  (for/list ((rtc (in-list rtc*))
+             #:unless (set-member? seen (require-typed-check-info-src rtc)))
+    (set-add! seen (require-typed-check-info-src rtc))
+    (format-rtc-info rtc)))
+
+(define (format-rtc-info rtc)
+  (define importing-mod (require-typed-check-info-src rtc))
+  (define sexp (require-typed-check-info-sexp rtc))
+  (list
+    (emph (path->string (file-name-from-path importing-mod)))
+    (linebreak)
+    (verbatim (pretty-format sexp))
+    (linebreak)))
+
+(define (format-types t*)
+  (apply itemize (for/list ((t (in-list t*))) (item (~a t)))))
+
+(define (get-require-typed-check-info)
+  (parameterize ([*with-cache-fasl?* #false]
+                 [*current-cache-directory* cache-path]
+                 [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+    (with-cache (cachefile "require-typed-check-info.rktd")
+      (lambda ()
+        (log-gtp-benchmarks-info "collecting type annotations (ETA 40 minutes)")
+        (for/list ((bm-name (in-list BENCHMARK-NAME*)))
+          (log-gtp-benchmarks-info "collecting annotations for ~a" bm-name)
+          (define tu-dir (benchmark->typed/untyped-dir bm-name))
+          (define rtc*
+            (dynamic-wind (lambda ()
+                            (setup-typed-configuration! tu-dir)
+                            (clean-directory! staging-path))
+                          (lambda ()
+                            (compile/require-typed-check-info (build-path staging/config-path main-name)))
+                          clean-staging!))
+          (cons bm-name rtc*))))))
+
+(define (setup-typed-configuration! tu-dir)
+  (setup-configuration! tu-dir typed-name))
+
+(define (setup-untyped-configuration! tu-dir)
+  (setup-configuration! tu-dir untyped-name))
+
+(define (setup-configuration! tu-dir x-name)
+  (define x-dir (build-path tu-dir x-name))
+  (define base-dir (build-path tu-dir base-name))
+  (define both-dir (build-path tu-dir both-name))
+  (void
+    (copy-racket-file* x-dir staging/config-path))
+  (when (directory-exists? base-dir)
+    (copy-directory/files* base-dir staging/base-path))
+  (when (directory-exists? both-dir)
+    (copy-file* both-dir staging/config-path))
+  (void))
+
+(define (clean-staging!)
+  (for ((dir (in-list (list staging/base-path staging/config-path))))
+    (for ((fn (in-glob (build-path dir "*")))
+          #:unless (bytes=? (path->bytes (file-name-from-path fn)) #"README.md"))
+      (delete-directory/files fn))))
+
 ;; =============================================================================
 
 (module+ test
-
-  (require racket/set)
 
   (test-case "maybe-rnd"
     (check-equal? (maybe-rnd 0) "0")
@@ -517,6 +607,5 @@
            [exp* (complete-path->exported-identifiers sieve-streams)])
       (check set=? exp*
              '(make-stream stream-first stream-get stream-rest stream-take stream-unfold stream? struct:stream stream))))
-
 
 )
