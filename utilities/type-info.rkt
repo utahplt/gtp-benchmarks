@@ -3,10 +3,12 @@
 ;; Tools for collecting type annotations
 
 (provide
-  compile/require-typed-check-info)
+  compile/require-typed-check-info
+  require-typed-check-info-src
+  require-typed-check-info-sexp)
 
 (require
-  require-typed-check/private/log
+  require-typed-check/logging
   (only-in racket/system
     process)
   (only-in racket/port

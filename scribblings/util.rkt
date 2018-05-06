@@ -8,7 +8,6 @@
   tabulate-gradual-typing-benchmarks-size)
 
 (require
-  require-typed-check/private/log
   (only-in gtp-util
     save-pict
     columnize
