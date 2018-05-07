@@ -79,7 +79,7 @@ index 8edcbfc..e8ed796 100644
 +  if (SCHEME_CHAPERONEP(val)) {
 +    #if COUNT_CHAPS
 +      int d = 1;
-+      d += chap_depth(val); 
++      d += chap_depth(val);
 +      if (proc_maxdepth < d) { proc_maxdepth = d; }
 +      proc_wraps++;
 +    #endif
