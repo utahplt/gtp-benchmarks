@@ -31,6 +31,8 @@ Nodes for migratable modules are circles --- these are the modules we apply
 Nodes for fixed modules are squares --- these modules are the same in all
  configurations.
 
+Note: these graphs do not show @emph{type adaptor modules}.
+
 @format-benchmark[#:name 'acquire
                   #:author "Matthias Felleisen"
                   #:purpose "Game"
