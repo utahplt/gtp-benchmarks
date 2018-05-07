@@ -40,9 +40,8 @@
       (define cmd (format "~a ~a" (path->string rkt) tmp-filename))
       (define v*
         (parameterize ((current-output-port (open-output-nowhere))
-                       #;(current-error-port (open-output-nowhere)))
+                       (current-error-port (open-output-nowhere)))
           (process/error-port-filter cmd cc-log? read-cc-info)))
-      (printf "wtf v* ~a~n" v*)
       (and (not (null? v*))
            (null? (cdr v*))
            (chaperones-count/c (car v*))
