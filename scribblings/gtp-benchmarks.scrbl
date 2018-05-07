@@ -258,7 +258,66 @@ See the source code for each benchmark to find what the aliases stand for.
 
 
 @section{Dynamic Benchmark Details}
-
-@; TODO chaperones patch, chaperone counts / info
 @; TODO (theoretical) worst-case performance [[contract profile]]
-@; TODo `raco expand` output of worst-case versions (for the contracts)
+@; TODO `raco expand` output of worst-case versions (for the contracts)
+
+This section reports low-level details about the execution of the
+ @emph{theoretical worst-case configuration} (for short: TWC) of each benchmark.
+The TWC configuration is the one in which every boundary between
+ migratable modules is guarded by a contract.
+In Typed Racket terms, this means every import between migratable modules is
+ via @racket[require/typed].
+(This configuration has worse performance than any configuration that
+ combines typed and untyped modules --- because in those real configurations,
+ only some of the boundaries are guarded with contracts.)
+
+The data in this section was obtained by running a version of Racket v6.12
+ instrumented with compiler-level counters to track chaperone use.
+The patch implementing the counters is part of this repository's source code,
+ and is adapted from a patch by @hyperlink["http://cs.brown.edu/~sstrickl/chaperones/"]{Strickland, Tobin-Hochstadt, Findler, and Flatt (2012)}.
+
+
+@subsection{Time and Garbage Collection Details}
+
+The data in @figure-ref{fig:dynamic-time} comes from calling @racket[vector-set-performance-stats!]
+ after running the TWC configuration.
+Column @emph{Milliseconds} column reports total running time (including setup, i.e., reading from data files) in milliseconds.
+Column @emph{GC Milliseconds} column reports the total garbage collection time.
+Column @emph{Num. GC} reports the number of garbage collections performed since start-up in the current place.
+Column @emph{Peak Bytes} reports the largest number of bytes that were allocated just before a garbage collection.
+
+
+@figure["fig:dynamic-time" @elem{TWC Time Details}
+  @format-time-info[]]
+
+
+@subsection{Chaperones Details}
+
+The data in @figure-ref{fig:dynamic-chaperones} reports low-level details about chaperones.
+
+Quick reference:
+
+@itemlist[
+@item{@emph{Proc.} = procedure chaperone}
+@item{@emph{Struct} = struct chaperone}
+@item{@emph{Vec} = vector chaperone}
+@item{@emph{apps} = applications and reads}
+@item{@emph{makes} = allocations}
+@item{@emph{depth} = layers of chaperones}
+]
+
+In more detail:
+ @emph{Proc. apps} counts the number of times the benchmark applies a chapereoned procedure,
+ @emph{Struct apps} counts the number of field references or property accesses to chaperoned structs,
+ and @emph{Vec. apps} counts the number of references to chaperoned vectors.
+The @emph{Proc. makes}, @emph{Struct makes}, and @emph{Vec. makes} columns count
+ the number of times each kind of chaperone was created.
+Finally, @emph{Proc. depth}, @emph{Struct depth}, and @emph{Vec. depth} report
+ the largest number of chaperones layered on top of one value.
+For example, if @emph{Proc. depth} is 3 then there is at least one function
+ in the benchmark that gets wrapped in three procedure chaperones when the benchmark runs.
+
+@figure["fig:dynamic-chaperones" @elem{TWC Chaperone Details}
+  @format-chaperones-info[]]
+
+
