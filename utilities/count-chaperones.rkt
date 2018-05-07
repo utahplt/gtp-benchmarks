@@ -9,9 +9,10 @@
 (require
   gtp-benchmarks/utilities/process-helper
   (only-in racket/math natural?)
-  (only-in racket/port with-input-from-string)
+  (only-in racket/port with-input-from-string open-output-nowhere)
   (only-in racket/list last)
   (only-in racket/system system)
+  (only-in racket/path path-only)
   (only-in ffi/unsafe _array in-array _int get-ffi-obj))
 
 ;; =============================================================================
@@ -29,17 +30,24 @@
 (define (has-count-chaperones-support? x)
   (define rkt (build-path x racket-name))
   (define tmp-filename (get-tmp-filename))
-  (with-handlers ((exn:fail? (lambda (_) #false)))
-    (dynamic-wind
-      (lambda ()
-        (with-output-to-file tmp-filename #:exists 'replace
-          (lambda ()
-            (displayln "#lang racket")))
-        (append-get-chaperones-count! tmp-filename))
-      (lambda ()
-        (system (format "~a ~a" (path->string rkt) tmp-filename))
-        #true)
-      (lambda () (delete-file tmp-filename)))))
+  (dynamic-wind
+    (lambda ()
+      (with-output-to-file tmp-filename #:exists 'replace
+        (lambda ()
+          (displayln "#lang racket")))
+      (append-get-chaperones-count! tmp-filename))
+    (lambda ()
+      (define cmd (format "~a ~a" (path->string rkt) tmp-filename))
+      (define v*
+        (parameterize ((current-output-port (open-output-nowhere))
+                       #;(current-error-port (open-output-nowhere)))
+          (process/error-port-filter cmd cc-log? read-cc-info)))
+      (printf "wtf v* ~a~n" v*)
+      (and (not (null? v*))
+           (null? (cdr v*))
+           (chaperones-count/c (car v*))
+           #true))
+    (lambda () (delete-file tmp-filename))))
 
 (define (get-tmp-filename)
   (define tmp (find-system-path 'temp-dir))
@@ -50,7 +58,7 @@
 
 (define (racket-bin/count-chaperones? x)
   (and (racket-bin? x)
-       (has-count-chaperones-support? (build-path x racket-name))))
+       (has-count-chaperones-support? x)))
 
 (define chaperones-count-key* '(
   proc_makes
@@ -84,11 +92,12 @@
   num-additional-hash-slots ;; searched to complete hash searches, using double hashing
   num-machine-code-bytes ;; not reported by `current-memory-use`
   peak-allocated-bytes ;; just before a garbage collection
-  ))
+))
 
 (define (chaperones-count-key? x)
   (and (symbol? x)
-       (memq x chaperones-count-key*)))
+       (memq x chaperones-count-key*)
+       #true))
 
 (define chaperones-count/c
   (hash/c chaperones-count-key?
@@ -191,6 +200,41 @@
   (require rackunit)
 
   (define SAMPLE-MESSAGE "count-chaperones: #hash()")
+
+  (define CI? (and (getenv "CI") #true))
+
+  (test-case "racket-bin?"
+    (check-false (racket-bin? "yolo"))
+    (check-false (racket-bin? 42))
+    (unless CI?
+      (check-true (racket-bin? (path-only (find-executable-path (find-system-path 'exec-file)))))))
+
+  (test-case "has-count-chaperones-support?"
+    (define my-fork "/Users/ben/code/racket/fork/racket/bin")
+    (define my-6.12c "/Users/ben/code/racket/6.12c/racket/bin")
+    (when (and (not CI?) (directory-exists? my-fork) (directory-exists? my-6.12c))
+      (check-false (has-count-chaperones-support? my-fork))
+      (check-false (racket-bin/count-chaperones? my-fork))
+      (check-true (has-count-chaperones-support? my-6.12c))
+      (check-true (racket-bin/count-chaperones? my-6.12c))))
+
+  (test-case "get-tmp-filename"
+    (define x (get-tmp-filename))
+    (check-true (path-string? x))
+    (check-false (file-exists? x))
+    (check-equal? (path-only x) (find-system-path 'temp-dir)))
+
+  (test-case "chaperones-count-key?"
+    (check-true (chaperones-count-key? 'proc_makes))
+    (check-false (chaperones-count-key? 'prolo))
+    (check-false (chaperones-count-key? 44)))
+
+  (test-case "chaperones-count/c"
+    (check-true (chaperones-count/c #hash()))
+    (check-true (chaperones-count/c '#hash((proc_apps . 0) (proc_makes . 1) (struct_depth* . #hash((0 . 10))))))
+    (check-false (chaperones-count/c '#hash((proc_wins . A))))
+    (check-false (chaperones-count/c #hash((0 . 0))))
+    (check-false (chaperones-count/c 4)))
 
   (test-case "cc-log?"
     (check-true (cc-log? SAMPLE-MESSAGE))
