@@ -120,8 +120,11 @@
     (define cmd
       (let* ([raco-str (path->string (build-path bin-dir raco-name))]
              [racket-str (path->string (build-path bin-dir racket-name))]
-             [name-str (path->string name)])
-        (format "~a make ~a && ~a ~a" raco-str name-str racket-str name-str)))
+             [name-str (path->string name)]
+             [disable-rtc "DISABLE_REQUIRE_TYPED_CHECK=1"]
+             [compile-cmd (format "~a ~a make ~a" disable-rtc raco-str name-str)]
+             [run-cmd (format "~a ~a ~a" disable-rtc racket-str name-str)])
+        (string-append compile-cmd " && " run-cmd)))
     (define v*
       (process/error-port-filter cmd cc-log? read-cc-info))
     (when (null? v*)
