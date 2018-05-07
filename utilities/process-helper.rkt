@@ -4,10 +4,11 @@
 (provide
   (contract-out
     [process/error-port-filter
-      (-> string?
-          (-> string? any/c)
-          (-> string? any/c)
-          (listof string?))]))
+      (parametric->/c [X]
+        (-> string?
+            (-> string? any/c)
+            (-> string? X)
+            (listof X)))]))
 
 (require
   (only-in racket/system
