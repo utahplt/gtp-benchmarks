@@ -223,12 +223,14 @@
         (printf "warning: '~a' untyped LOC is greater than typed LOC (~a vs. ~a)~n" bm-name u-loc t-loc))
       diff))
   (define g (get-modulegraph src))
-  (make-immutable-hash
-    (list (cons "Untyped LOC" u-loc)
-          (cons "Annotation LOC" a-loc)
-          (cons "# Modules" (modulegraph->num-modules g))
-          (cons "# Bnd." (modulegraph->num-internal-boundaries g))
-          (cons "# Exp." (modulegraph->num-internal-exports g)))))
+  (begin0
+    (make-immutable-hash
+      (list (cons "Untyped LOC" u-loc)
+            (cons "Annotation LOC" a-loc)
+            (cons "# Modules" (modulegraph->num-modules g))
+            (cons "# Bnd." (modulegraph->num-internal-boundaries g))
+            (cons "# Exp." (modulegraph->num-internal-exports g))))
+    (clean-staging!)))
 
 (define (benchmark->typed/untyped-dir bm-name)
   (define src (build-path benchmarks-path (symbol->string bm-name)))
@@ -410,13 +412,11 @@
   (and (< 0 L)
        (eq? #\\ (string-ref str (- L 1)))))
 
-(define (get-modulegraph tu-dir)
+(define (get-modulegraph src)
   (void
-    (setup-untyped-configuration! tu-dir)
-    (clean-directory! staging-path))
-  (begin0
-    (make-modulegraph (glob (build-path staging/config-path "*.rkt")))
-    (clean-staging!)))
+    (clean-directory! src))
+  (define udir (build-path src untyped-name))
+  (make-modulegraph (glob (build-path udir "*.rkt"))))
 
 (define (clean-directory! dir)
   (log-gtp-benchmarks-info "cleaning directory '~a'" dir)
@@ -444,7 +444,7 @@
 
 (define (clean-staging!)
   (for ((dir (in-list (list staging/base-path staging/config-path))))
-    (for ((fn (in-glob (build-path dir "*")))
+    (for ((fn (in-list (glob (build-path dir "*"))))
           #:unless (bytes=? (path->bytes (file-name-from-path fn)) #"README.md"))
       (delete-directory/files fn))))
 
@@ -459,6 +459,8 @@
           (log-gtp-benchmarks-info "collecting module graph for ~a" bm)
           (define tu (benchmark->typed/untyped-dir bm))
           (define G (get-modulegraph tu))
+          (void
+            (clean-staging!))
           (values bm (simplify-module-names G tu)))))))
 
 (define (format-require-typed-check-info)
