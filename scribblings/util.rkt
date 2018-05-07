@@ -35,6 +35,7 @@
   file/glob
   gtp-benchmarks/utilities/modulegraph
   gtp-benchmarks/utilities/type-info
+  gtp-benchmarks/utilities/count-chaperones
   pict
   syntax-sloc/directory-sloc
   scribble/manual
@@ -502,6 +503,30 @@
                             (compile/require-typed-check-info (build-path staging/config-path main-name)))
                           clean-staging!))
           (cons bm-name rtc*))))))
+
+(define (get-count-chaperones-bin)
+  ;; Example: "/Users/ben/code/racket/6.12c/racket/bin/"
+  (raise-user-error 'get-count-chaperones-bin "not implemented --- if you have a version of Racket with the chaperone-counting patch, please change the body of this function to point to the version's `bin/` folder"))
+
+(define (get-count-chaperones-info)
+  (parameterize ([*with-cache-fasl?* #false]
+                 [*current-cache-directory* cache-path]
+                 [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+    (with-cache (cachefile "count-chaperones.rktd")
+      (lambda ()
+        (log-gtp-benchmarks-info "collecting chaperone counts (ETA ??? hours)")
+        (for/list ((bm-name (in-list BENCHMARK-NAME*)))
+          (log-gtp-benchmarks-info "collecting annotations for ~a" bm-name)
+          (define tu-dir (benchmark->typed/untyped-dir bm-name))
+          (define cc-bin (get-count-chaperones-bin))
+          (define cc*
+            (dynamic-wind (lambda ()
+                            (setup-typed-configuration! tu-dir)
+                            (clean-directory! staging-path))
+                          (lambda ()
+                            (count-chaperones cc-bin (build-path staging/config-path main-name)))
+                          clean-staging!))
+          (cons bm-name cc*))))))
 
 ;; =============================================================================
 
