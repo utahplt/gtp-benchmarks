@@ -34,7 +34,7 @@
     (lambda ()
       (with-output-to-file tmp-filename #:exists 'replace
         (lambda ()
-          (displayln "#lang racket")))
+          (displayln "#lang typed/racket/base")))
       (append-get-chaperones-count! tmp-filename))
     (lambda ()
       (define cmd (format "~a ~a" (path->string rkt) tmp-filename))
@@ -109,7 +109,7 @@
     (raise-argument-error 'append-get-chaperones-count! "file-exists?" fn))
   (with-output-to-file fn #:exists 'append
     (lambda ()
-      (displayln "(require (submod gtp-benchmarks/utilities/count-chaperones get-chaperones-count))")
+      (displayln "(require/typed (submod gtp-benchmarks/utilities/count-chaperones get-chaperones-count) (get-chaperones-count (-> Any)))")
       (displayln "(eprintf \"count-chaperones: ~s~n\" (get-chaperones-count))")
       (void))))
 
