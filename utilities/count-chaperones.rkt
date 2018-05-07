@@ -150,7 +150,7 @@
   (provide get-chaperones-count)
   (require
     (only-in ffi/unsafe _array in-array _int get-ffi-obj))
-  (define v (vector 12))
+  (define v (make-vector 12 0))
   (define (get-chaperones-count)
     (void (vector-set-performance-stats! v))
     ;; TODO use a macro to make this "hash-filling" code?
