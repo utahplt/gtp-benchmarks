@@ -3,6 +3,8 @@
 (provide
   format-benchmark
   format-require-typed-check-info
+  format-chaperones-info
+  format-time-info
   library
   bm
   tabulate-gradual-typing-benchmarks-size)
@@ -18,6 +20,7 @@
   (only-in gtp-util/system
     md5sum)
   (only-in scribble-abbrevs
+    add-commas
     oxfordize
     integer->word
     format-url)
@@ -185,9 +188,9 @@
           (log-gtp-benchmarks-info "building size table (ETA 10 minutes)")
           (for/list ((bm-name (in-list name*)))
             (cons bm-name (benchmark->info bm-name)))))))
-  (make-table/horizontal name->info title* values))
+  (make-table/horizontal name->info title* values maybe-rnd))
 
-(define (make-table/horizontal tbl title* title->key)
+(define (make-table/horizontal tbl title* title->key render-value)
   (define rendered-name*
     (for/list ([kv (in-list tbl)])
       (tt (symbol->string (car kv)))))
@@ -202,7 +205,7 @@
                        (n (in-list rendered-name*)))
               (cons n
                     (for/list ([t (in-list title*)])
-                      (maybe-rnd (hash-ref (cdr kv) (title->key t))))))))))
+                      (render-value (hash-ref (cdr kv) (title->key t))))))))))
 
 (define (maybe-rnd x)
   (if (exact-integer? x)
@@ -505,7 +508,7 @@
           (cons bm-name rtc*))))))
 
 (define (get-count-chaperones-bin)
-  ;; Example: "/Users/ben/code/racket/6.12c/racket/bin/"
+  ;; Example: "/home/ben/code/racket/6.12cc/bin/"
   (raise-user-error 'get-count-chaperones-bin "not implemented --- if you have a version of Racket with the chaperone-counting patch, please change the body of this function to point to the version's `bin/` folder"))
 
 (define (get-count-chaperones-info)
@@ -527,6 +530,38 @@
                             (count-chaperones cc-bin (build-path staging/config-path main-name)))
                           clean-staging!))
           (cons bm-name cc*))))))
+
+(define (format-chaperones-info)
+  (define cc* (get-count-chaperones-info))
+  (for/list ((title+key (in-list '((("Proc. apps" . proc_apps)
+                                    ("Proc. makes" . proc_makes)
+                                    ("Proc. depth" . proc_maxdepth))
+                                   (("Struct apps" . struct_apps)
+                                    ("Struct makes" . struct_makes)
+                                    ("Struct depth" . struct_maxdepth))
+                                   (("Vec. apps" . vec_apps)
+                                    ("Vec. makes" . vec_makes)
+                                    ("Vec. depth" . vec_maxdepth))))))
+    (define (title->key t)
+      (define v (assoc t title+key))
+      (if v
+        (cdr v)
+        (raise-arguments-error 'format-chaperones-info "invalid title" "title" t)))
+    (make-table/horizontal cc* (map car title+key) title->key add-commas)))
+
+(define (format-time-info)
+  (define cc* (get-count-chaperones-info))
+  (define title+key
+    '(("Milliseconds" . current-process-milliseconds)
+      ("GC Milliseconds" . current-gc-milliseconds)
+      ("Num. GC" . num-garbage-collections)
+      ("Peak Bytes" . peak-allocated-bytes)))
+  (define (title->key t)
+    (define v (assoc t title+key))
+    (if v
+      (cdr v)
+      (raise-arguments-error 'format-chaperones-info "invalid title" "title" t)))
+  (make-table/horizontal cc* (map car title+key) title->key add-commas))
 
 ;; =============================================================================
 
