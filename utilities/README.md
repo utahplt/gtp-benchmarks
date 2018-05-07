@@ -3,11 +3,11 @@ scripts
 
 Racket code:
 
-- `copy-configuration.rkt`
-- `count-chaperones.rkt`
-- `make-configurations.rkt`
-- `modulegraph.rkt`
-- `type-info.rkt`
+- `count-chaperones.rkt` : collects low-level performance details
+- `make-configurations.rkt` : creates the `2**N` configurations for a benchmark
+- `modulegraph.rkt` : builds module-dependence graphs
+- `type-info.rkt` : collects type annotations
+- `copy-configuration.rkt` : creates one configuration (not user-friendly)
 
 Other:
 
