@@ -1,0 +1,274 @@
+From 15e0f714c6007d74c1c9538c1d3ad286dff705d7 Mon Sep 17 00:00:00 2001
+From: Ben Greenman <benjaminlgreenman@gmail.com>
+Date: Sun, 6 May 2018 23:15:04 -0400
+Subject: [PATCH] apply count-chaperones patch
+
+---
+ racket/src/racket/src/Makefile.in |  6 +++---
+ racket/src/racket/src/fun.c       | 29 ++++++++++++++++++++++++++++-
+ racket/src/racket/src/schchap.h   | 24 ++++++++++++++++++++++++
+ racket/src/racket/src/struct.c    | 36 ++++++++++++++++++++++++++++++++++++
+ racket/src/racket/src/vector.c    | 23 +++++++++++++++++++++++
+ 5 files changed, 114 insertions(+), 4 deletions(-)
+ create mode 100644 racket/src/racket/src/schchap.h
+
+diff --git a/racket/src/racket/src/Makefile.in b/racket/src/racket/src/Makefile.in
+index 1e63d80..1514dec 100644
+--- a/racket/src/racket/src/Makefile.in
++++ b/racket/src/racket/src/Makefile.in
+@@ -358,7 +358,7 @@ file.@LTO@: $(COMMON_HEADERS) $(RKTIOHEADERS) \
+         $(srcdir)/stypes.h
+ fun.@LTO@: $(COMMON_HEADERS) $(RKTIOHEADERS) \
+         $(srcdir)/stypes.h $(srcdir)/mzmark_fun.inc $(srcdir)/schmap.inc \
+-        $(srcdir)/future.h
++        $(srcdir)/future.h $(srcdir)/schchap.h
+ future.@LTO@: $(COMMON_HEADERS) $(srcdir)/future.h $(SCONFIG) \
+         $(srcdir)/stypes.h $(srcdir)/mzmark_future.inc \
+         $(srcdir)/jit_ts_future_glue.c $(srcdir)/jit_ts_runtime_glue.c $(srcdir)/jit_ts_protos.h
+@@ -430,7 +430,7 @@ string.@LTO@: $(COMMON_HEADERS) $(RKTIO_HEADERS) \
+          $(srcdir)/stypes.h    $(srcdir)/schvers.h $(srcdir)/mzmark_string.inc $(srcdir)/strops.inc \
+          $(srcdir)/schustr.inc $(srcdir)/systype.inc
+ struct.@LTO@: $(COMMON_HEADERS) \
+-         $(srcdir)/stypes.h $(srcdir)/mzmark_struct.inc
++         $(srcdir)/stypes.h $(srcdir)/mzmark_struct.inc $(srcdir)/schchap.h
+ syntax.@LTO@: $(COMMON_HEADERS) \
+          $(srcdir)/stypes.h $(srcdir)/mzmark_syntax.inc
+ symbol.@LTO@: $(COMMON_HEADERS) \
+@@ -440,7 +440,7 @@ sema.@LTO@: $(COMMON_HEADERS) \
+ type.@LTO@: $(COMMON_HEADERS) \
+         $(srcdir)/stypes.h $(srcdir)/mzmark_type.inc
+ vector.@LTO@: $(COMMON_HEADERS) \
+-         $(srcdir)/stypes.h
++         $(srcdir)/stypes.h $(srcdir)/schchap.h
+ validate.@LTO@: $(COMMON_HEADERS) \
+          $(srcdir)/stypes.h $(srcdir)/mzmark_validate.inc
+ 
+diff --git a/racket/src/racket/src/fun.c b/racket/src/racket/src/fun.c
+index 8edcbfc..e8ed796 100644
+--- a/racket/src/racket/src/fun.c
++++ b/racket/src/racket/src/fun.c
+@@ -32,6 +32,7 @@
+ #include "schpriv.h"
+ #include "schmach.h"
+ #include "schrktio.h"
++#include "schchap.h"
+ 
+ static void ASSERT_SUSPEND_BREAK_ZERO() {
+ #if 0
+@@ -95,6 +96,11 @@ THREAD_LOCAL_DECL(static Scheme_Overflow *offstack_overflow);
+ THREAD_LOCAL_DECL(int scheme_cont_capture_count);
+ THREAD_LOCAL_DECL(static int scheme_prompt_capture_count);
+ 
++#if COUNT_CHAPS
++int proc_makes=0, proc_apps=0, proc_wraps=0, proc_maxdepth=0;
++int proc_depth[901];
++#endif
++
+ #define MARK_CACHE_THRESHOLD 16
+ 
+ /* locals */
+@@ -3208,8 +3214,19 @@ static Scheme_Object *do_chaperone_procedure(const char *name, const char *whati
+   Scheme_Object *val = argv[0], *orig, *naya, *r, *app_mark;
+   Scheme_Object *props;
+ 
+-  if (SCHEME_CHAPERONEP(val))
++#if COUNT_CHAPS
++  proc_makes++;
++#endif
++
++  if (SCHEME_CHAPERONEP(val)) {
++    #if COUNT_CHAPS
++      int d = 1;
++      d += chap_depth(val);
++      if (proc_maxdepth < d) { proc_maxdepth = d; }
++      proc_wraps++;
++    #endif
+     val = SCHEME_CHAPERONE_VAL(val);
++  }
+ 
+   if (!SCHEME_PROCP(val))
+     scheme_wrong_contract(name, "procedure?", 0, argc, argv);
+@@ -3524,6 +3541,16 @@ Scheme_Object *scheme_apply_chaperone(Scheme_Object *o, int argc, Scheme_Object
+   int need_pop_mark;
+   Scheme_Cont_Frame_Data cframe;
+ 
++#if COUNT_CHAPS
++  proc_apps++;
++  if (SCHEME_CHAPERONEP(o)) {
++    int d;
++    d = chap_depth(o);
++    if (d < 900) { proc_depth[d]++; }
++  }
++#endif
++
++
+   if (SCHEME_RPAIRP(o)) {
+     /* An applicable struct, where a layer of struct chaperones
+        has been removed from the object to apply, but we will
+diff --git a/racket/src/racket/src/schchap.h b/racket/src/racket/src/schchap.h
+new file mode 100644
+index 0000000..f6d03c9
+--- /dev/null
++++ b/racket/src/racket/src/schchap.h
+@@ -0,0 +1,24 @@
++#define COUNT_CHAPS 1
++
++#if COUNT_CHAPS
++#include "schpriv.h"
++
++extern int proc_makes, proc_apps, proc_wraps, proc_maxdepth;
++extern int struct_makes, struct_apps, struct_wraps, struct_maxdepth;
++extern int vec_makes, vec_apps, vec_wraps, vec_maxdepth;
++
++extern int proc_depth   [901];
++extern int struct_depth [901];
++extern int vec_depth    [901];
++
++//bg
++static int chap_depth(Scheme_Object *val)
++{
++  int depth = 0;
++  while (SCHEME_CHAPERONEP(val)) {
++    ++depth;
++    val = ((Scheme_Chaperone *)val)->prev;
++  }
++  return depth;
++}
++#endif
+diff --git a/racket/src/racket/src/struct.c b/racket/src/racket/src/struct.c
+index 84c9b1a..eb7d946 100644
+--- a/racket/src/racket/src/struct.c
++++ b/racket/src/racket/src/struct.c
+@@ -21,6 +21,7 @@
+ 
+ #include "schpriv.h"
+ #include "schmach.h"
++#include "schchap.h"
+ 
+ #define PROP_USE_HT_COUNT 5
+ 
+@@ -63,6 +64,11 @@ READ_ONLY static Scheme_Object *struct_info_proc;
+ ROSYM static Scheme_Object *ellipses_symbol;
+ ROSYM static Scheme_Object *prefab_symbol;
+ 
++#if COUNT_CHAPS
++  int struct_makes=0, struct_apps=0, struct_wraps=0, struct_maxdepth=0;
++  int struct_depth[901];
++#endif
++
+ /* locals */
+ 
+ typedef enum {
+@@ -1102,6 +1108,16 @@ static Scheme_Object *chaperone_prop_acc_overflow(const char *who, Scheme_Object
+ static Scheme_Object *do_chaperone_prop_accessor(const char *who, Scheme_Object *prop,
+                                                  Scheme_Object *orig_arg,  Scheme_Object *arg)
+ {
++
++#if COUNT_CHAPS
++  struct_apps++;
++  if (SCHEME_CHAPERONEP(arg)) {
++    int d;
++    d = chap_depth(arg);
++    if (d < 900) { struct_depth[d]++; }
++  }
++#endif
++
+   while (1) {
+     if (SCHEME_CHAPERONEP(arg)) {
+       Scheme_Chaperone *px = (Scheme_Chaperone *)arg;
+@@ -2076,6 +2092,16 @@ static void raise_undefined_error(const char *who, Scheme_Object *prim, Scheme_O
+ static Scheme_Object *chaperone_struct_ref(const char *who, Scheme_Object *prim, 
+                                            Scheme_Object *orig_o, Scheme_Object *o, int i)
+ {
++
++#if COUNT_CHAPS
++  struct_apps++;
++  if (SCHEME_CHAPERONEP(o)) {
++    int d;
++    d = chap_depth(o);
++    if (d < 900) { struct_depth[d]++; }
++  }
++#endif
++
+   while (1) {
+     if (!SCHEME_CHAPERONEP(o)) {
+       return ((Scheme_Structure *)o)->slots[i];
+@@ -5922,9 +5948,19 @@ static Scheme_Object *do_chaperone_struct(const char *name, int is_impersonator,
+   intptr_t field_pos;
+   int empty_si_chaperone = 0, *empty_redirects = NULL, has_redirect = 0, witnessed = 0;
+ 
++#if COUNT_CHAPS
++  struct_makes++;
++#endif
++
+   if (argc == 1) return argv[0];
+ 
+   if (SCHEME_CHAPERONEP(val)) {
++  #if COUNT_CHAPS
++    int d = 1;
++    d += chap_depth(val);
++    if (struct_maxdepth < d) { struct_maxdepth = d; }
++    struct_wraps++;
++  #endif
+     props = ((Scheme_Chaperone *)val)->props;
+     val = SCHEME_CHAPERONE_VAL(val);
+   }
+diff --git a/racket/src/racket/src/vector.c b/racket/src/racket/src/vector.c
+index 6a3326a..e701e32 100644
+--- a/racket/src/racket/src/vector.c
++++ b/racket/src/racket/src/vector.c
+@@ -25,6 +25,7 @@
+ 
+ #include "schpriv.h"
+ #include "schmach.h"
++#include "schchap.h"
+ 
+ /* globals */
+ READ_ONLY Scheme_Object *scheme_vector_proc;
+@@ -54,6 +55,11 @@ READ_ONLY Scheme_Object *scheme_unsafe_struct_star_ref_proc;
+ READ_ONLY Scheme_Object *scheme_unsafe_struct_set_proc;
+ READ_ONLY Scheme_Object *scheme_unsafe_struct_star_set_proc;
+ 
++#if COUNT_CHAPS
++  int vec_makes=0, vec_apps=0, vec_wraps=0, vec_maxdepth=0;
++  int vec_depth[901];
++#endif
++
+ /* locals */
+ static Scheme_Object *vector_p (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *vector (int argc, Scheme_Object *argv[]);
+@@ -585,6 +591,13 @@ Scheme_Object *scheme_chaperone_vector_ref2(Scheme_Object *o, int i, Scheme_Obje
+     Scheme_Chaperone *px = (Scheme_Chaperone *)o;
+     Scheme_Object *a[4], *red, *orig;
+ 
++#if COUNT_CHAPS
++    vec_apps++;
++    int d = 1;
++    d += chap_depth((Scheme_Object *) px);
++    if (d < 900) { vec_depth[d]++; }
++#endif
++
+ #ifdef DO_STACK_CHECK
+     {
+ # include "mzstkchk.h"
+@@ -1102,7 +1115,17 @@ static Scheme_Object *do_chaperone_vector(const char *name, int is_impersonator,
+   Scheme_Object *redirects;
+   Scheme_Object *props;
+ 
++#if COUNT_CHAPS
++  vec_makes++;
++#endif
++
+   if (SCHEME_CHAPERONEP(val)) {
++    #if COUNT_CHAPS
++      int d = 1;
++      d += chap_depth(val);
++      if (vec_maxdepth < d) { vec_maxdepth = d; }
++      vec_wraps++;
++    #endif
+     val = SCHEME_CHAPERONE_VAL(val);
+   }
+ 
+-- 
+2.5.4 (Apple Git-61)
+
