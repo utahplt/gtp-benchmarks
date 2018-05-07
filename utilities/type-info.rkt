@@ -9,8 +9,7 @@
 
 (require
   require-typed-check/logging
-  (only-in racket/system
-    process)
+  gtp-benchmarks/utilities/process-helper
   (only-in racket/port
     with-input-from-string)
   (only-in racket/path
@@ -20,12 +19,6 @@
 ;; =============================================================================
 
 (define require-typed-check "require-typed-check")
-
-(define (log-info str . arg*)
-  (apply printf (string-append "INFO: " str "~n") arg*))
-
-(define (log-error str . arg*)
-  (apply eprintf (string-append "ERROR: " str "~n") arg*))
 
 (define (find-raco)
   (define sp
@@ -43,34 +36,10 @@
 (define (compile/require-typed-check-info src)
   (define-values [base name _dir] (split-path src))
   (parameterize ([current-directory (if (path? base) base (current-directory))])
-    (define-values [pout pin pid perr pc]
-      (let* ([raco-str (find-raco)]
-             [cmd (format "PLTSTDERR='error info@require-typed-check' ~a make ~a" raco-str (path->string name))])
-        (apply values (process cmd))))
-    (define v*
-      (let loop ()
-        (define pstatus (pc 'status))
-        (case pstatus
-          ((running)
-           (log-info "... running")
-           (pc 'wait)
-           (loop))
-          ((done-error)
-           (log-error "failed to compile '~a'" src)
-           (for ((ln (in-lines perr)))
-             (log-error ln))
-           '())
-          ((done-ok)
-           (log-info "... done-ok")
-           (for/list ((ln (in-lines perr))
-                      #:when (rtc-log? ln))
-             (read-rtc-info ln)))
-          (else
-            (loop)))))
-      (close-output-port pin)
-      (close-input-port perr)
-      (close-input-port pout)
-      v*))
+    (define cmd
+      (let ((raco-str (find-raco)))
+        (format "PLTSTDERR='error info@require-typed-check' ~a make ~a" raco-str (path->string name))))
+    (process/error-port-filter cmd rtc-log? read-rtc-info)))
 
 (define rtc-log?
   (let ((rx (regexp (string-append "^" require-typed-check ": "))))
