@@ -85,12 +85,13 @@
 (define (directory->md5* dir)
   (map md5sum (glob (build-path dir "**" "*.rkt"))))
 
-(define benchmarks-md5*
-  (directory->md5* benchmarks-path))
-
 (define BENCHMARK-NAME*
   (for/list ((x (in-list (directory-list benchmarks-path))))
     (string->symbol (path->string x))))
+
+(define benchmarks-key*
+  (sort BENCHMARK-NAME* symbol<?)
+  #;(directory->md5* benchmarks-path))
 
 (module+ test
   (test-case "benchmark-name*"
@@ -182,7 +183,7 @@
   (define name->info
     (parameterize ([*with-cache-fasl?* #false]
                    [*current-cache-directory* cache-path]
-                   [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+                   [*current-cache-keys* (list (lambda () benchmarks-key*))])
       (with-cache (cachefile file-name)
         (lambda ()
           (log-gtp-benchmarks-info "building size table (ETA 10 minutes)")
@@ -451,7 +452,7 @@
 (define modulegraph-cache
   (parameterize ([*with-cache-fasl?* #false]
                  [*current-cache-directory* cache-path]
-                 [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+                 [*current-cache-keys* (list (lambda () benchmarks-key*))])
     (with-cache (cachefile "modulegraph.rktd")
       (lambda ()
         (log-gtp-benchmarks-info "collecting module graphs (ETA 30 minutes)")
@@ -493,7 +494,7 @@
 (define (get-require-typed-check-info)
   (parameterize ([*with-cache-fasl?* #false]
                  [*current-cache-directory* cache-path]
-                 [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+                 [*current-cache-keys* (list (lambda () benchmarks-key*))])
     (with-cache (cachefile "require-typed-check-info.rktd")
       (lambda ()
         (log-gtp-benchmarks-info "collecting type annotations (ETA 40 minutes)")
@@ -516,7 +517,7 @@
 (define (get-count-chaperones-info)
   (parameterize ([*with-cache-fasl?* #false]
                  [*current-cache-directory* cache-path]
-                 [*current-cache-keys* (list (lambda () benchmarks-md5*))])
+                 [*current-cache-keys* (list (lambda () benchmarks-key*))])
     (with-cache (cachefile "count-chaperones.rktd")
       (lambda ()
         (log-gtp-benchmarks-info "collecting chaperone counts (ETA ??? hours)")
