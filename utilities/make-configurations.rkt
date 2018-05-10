@@ -1,4 +1,11 @@
 #lang racket/base
+
+(require racket/contract)
+(provide
+  (contract-out
+    (make-configurations
+      (-> (and/c path-string? directory-exists?) void?))))
+
 (require
   (only-in file/glob glob in-glob)
   (only-in racket/format ~r)
@@ -35,7 +42,8 @@
           (f (in-list f*)))
       (if (eq? c #\0)
         (copy-file (build-path dir "untyped" f) (build-path config-dir cfg-dir f))
-        (copy-file (build-path dir "typed" f) (build-path config-dir cfg-dir f))))))
+        (copy-file (build-path dir "typed" f) (build-path config-dir cfg-dir f)))))
+  (void))
 
 (module+ main
   (require racket/cmdline)
