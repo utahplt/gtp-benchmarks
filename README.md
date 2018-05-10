@@ -1,5 +1,7 @@
 gtp-benchmarks
 ===
+[![Build Status](https://travis-ci.org/bennn/gtp-benchmarks.svg)](https://travis-ci.org/bennn/gtp-benchmarks)
+[![Scribble](https://img.shields.io/badge/Docs-Scribble-blue.svg)](http://docs.racket-lang.org/gtp-benchmarks/index.html)
 
 Gradual Typing Performance benchmark programs.
 
