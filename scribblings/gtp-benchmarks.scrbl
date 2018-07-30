@@ -101,6 +101,11 @@ Note: these graphs do not show @emph{type adaptor modules}.
                   #:depends '()]{
   Interprets Forth programs.
   The interpreter represents calculator commands as a list of first-class objects.
+
+  Note: this benchmark runs very quickly untyped (< 50 milliseconds), and extremely slowly with certain type boundaries.
+  As the extreme slowdowns improve, we plan to increase the input size so the untyped configuration runs in the 1-2 second range.
+
+  @history[#:changed "0.2" @elem{Increased input size, thanks to Typed Racket improvements (@hyperlink["https://github.com/racket/typed-racket/commit/ff2956d031f9ccea840d56c37d4011e826c873dd"]{@tt{@smaller{ff2956d}}}).}]
 }
 @format-benchmark[#:name 'fsm
                   #:author "Linh Chi Nguyen"

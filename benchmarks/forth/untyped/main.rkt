@@ -14,6 +14,6 @@
     (define-values [_e _s] (forth-eval* lines))
     (void)))
 
-(define lines (file->lines "../base/history.txt"))
+(define lines (file->lines "../base/history-100.txt"))
 
 (time (main lines))
