@@ -16,6 +16,8 @@
 
 GTP = gradual typing performance
 
+Source: @url{https://github.com/bennn/gtp-benchmarks}
+
 This package contains benchmarks for measuring the cost of typed/untyped
  interaction in Typed Racket.
 
