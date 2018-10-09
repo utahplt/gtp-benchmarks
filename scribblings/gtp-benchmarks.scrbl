@@ -54,6 +54,22 @@ To run a benchmark:
 }
 
 
+@section[#:tag "gtp:history"]{Version Notes}
+
+@itemlist[
+  @item[
+    @history[#:change "1.0"
+             @elem{Renamed @bm{quadBG} to @bm{quadU} and replaced @bm{quadMB} with @bm{quadT}.
+                   In the beginning, @bm{quad} came to us as two programs:
+                    an original untyped program and a fully-typed version by the original author.
+                   The @bm{quadMB} benchmark integrated these two programs;
+                    this was a @bold{BAD} decision, because the typed version performed significantly different computations due to uses of @racket[cast] and @racket[define-predicate].
+                   The @bm{quadBG} benchmark added types to the untyped program (with minimal changes to the code).
+                   The new @bm{quadMB} benchmark removes types from the typed program (with minimal changes to the code).
+                   Please do not refer to @bm{quadBG} or @bm{quadMB} in future applications of this benchmark suite.}]]
+]
+
+
 @section[#:tag "gtp:descriptions"]{Benchmark Descriptions}
 
 This section has summaries of the benchmark programs.
@@ -170,26 +186,21 @@ Note: these graphs do not show @emph{type adaptor modules}.
   Computes Levenshtein distances and morse code translations for a
   sequence of pairs of words.
 }
-@format-benchmark[#:name 'quadBG
+@format-benchmark[#:name 'quadU
                   #:author "Ben Greenman"
                   #:purpose "Typesetting"
                   #:origin "https://github.com/mbutterick/quad"
                   #:depends '((csp untyped))]{
   Converts S-expression source code to @tt{PDF} format.
-  This benchmark is similar to the @bm{quadMB} benchmark except for its
-  choice of type annotations; the types that @bm{quadBG} uses to describe its
-  input correspond to flat contracts.
+  TODO
 }
-@format-benchmark[#:name 'quadMB
+@format-benchmark[#:name 'quadT
                   #:author "Matthew Butterick"
                   #:purpose "Typesetting"
                   #:origin "https://github.com/mbutterick/quad"
                   #:depends '((csp untyped))]{
-  Converts S-expression source code to @tt{PDF} format (same as @bm{quadBG}).
-  This benchmark performs slightly different computations in its typed and
-  untyped versions: the typed version uses recursive predicates (derived from
-  its types) to guide control flow, whereas the untyped version uses flat
-  predicates.
+  Converts S-expression source code to @tt{PDF} format.
+  TODO
 }
 @format-benchmark[#:name 'sieve
                   #:author "Ben Greenman"
