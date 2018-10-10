@@ -199,9 +199,9 @@
     (tabular
       #:sep (hspace 2)
       #:style 'block
-      #:row-properties '(left right)
+      #:row-properties '((left bottom-border) right)
       #:column-properties '(right)
-      (cons (cons "" title*)
+      (cons (cons "Benchmark" title*)
             (for/list ((kv (in-list tbl))
                        (n (in-list rendered-name*)))
               (cons n
