@@ -314,8 +314,8 @@ See the source code for each benchmark to find what the aliases stand for.
 @; TODO `raco expand` output of worst-case versions (for the contracts)
 
 This section reports low-level details about the execution of the
- @emph{theoretical worst-case configuration} (for short: TWC) of each benchmark.
-The TWC configuration is the one in which every boundary between
+ @deftech[#:key "twc"]{theoretical worst-case configuration} (for short: @tech{TWC}) of each benchmark.
+The @tech{TWC} configuration is the one in which every boundary between
  migratable modules is guarded by a contract.
 In Typed Racket terms, this means every import between migratable modules is
  via @racket[require/typed].
@@ -332,14 +332,14 @@ The patch implementing the counters is part of this repository's source code,
 @subsection{Time and Garbage Collection Details}
 
 The data in @figure-ref{fig:dynamic-time} comes from calling @racket[vector-set-performance-stats!]
- after running the TWC configuration.
+ after running the @tech{TWC} configuration.
 Column @emph{Milliseconds} column reports total running time (including setup, i.e., reading from data files) in milliseconds.
 Column @emph{GC Milliseconds} column reports the total garbage collection time.
 Column @emph{Num. GC} reports the number of garbage collections performed since start-up in the current place.
 Column @emph{Peak Bytes} reports the largest number of bytes that were allocated just before a garbage collection.
 
 
-@figure["fig:dynamic-time" @elem{TWC Time Details}
+@figure["fig:dynamic-time" @elem{@tech{TWC} Time Details}
   @format-time-info[]]
 
 
@@ -369,7 +369,7 @@ Finally, @emph{Proc. depth}, @emph{Struct depth}, and @emph{Vec. depth} report
 For example, if @emph{Proc. depth} is 3 then there is at least one function
  in the benchmark that gets wrapped in three procedure chaperones when the benchmark runs.
 
-@figure["fig:dynamic-chaperones" @elem{TWC Chaperone Details}
+@figure["fig:dynamic-chaperones" @elem{@tech{TWC} Chaperone Details}
   @format-chaperones-info[]]
 
 
