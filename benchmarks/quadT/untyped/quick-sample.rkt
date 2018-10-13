@@ -8,13 +8,16 @@
   require-typed-check
   racket/file
   (only-in racket/include include)
-(only-in "quads.rkt"
+  "../base/core-types.rkt"
+  "../base/quad-types.rkt"
+)
+(require (only-in "quads.rkt"
   page-break
   column-break
   word
   box
   block
- block-break))
+  block-break))
 
 ;; =============================================================================
 

@@ -73,6 +73,7 @@
 ;; -----------------------------------------------------------------------------
 
 (require
+ #;"../base/core-types.rkt"
  (for-syntax
   racket/base
   racket/syntax))
@@ -169,7 +170,7 @@
 
 (define mergeable-quad-types '(char run word))
 
-(define default-word-break-list (make-parameter '(nb "" bb "-")))
+(define default-word-break-list  (make-parameter '(nb "" bb "-")))
 
 (define line-looseness-tolerance 0.05) ; 0.04 seems to be the magic point that avoids a lot of hyphenation
 (define hyphen-limit 1) ; does not work with first-fit wrapping

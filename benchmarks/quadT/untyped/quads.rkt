@@ -1,51 +1,58 @@
 #lang racket/base
 
 (provide
-  line?
-  column?
+  group-quad-list
   block
   quad-name
   quad-attrs
   quad-list
-  group-quad-list
   make-quadattrs
   box
-  page-break? page-break
-  column-break? column-break
-  block-break? block-break
+  page-break
+  column-break
+  block-break
   page
   quad-attr-ref
   column
   quad-has-attr?
-  run?
-  word?
-  word-break?
   word-string
-  spacer?
   spacer
   line
   whitespace/nbsp?
+  whitespace?
   quads->doc
   quads->column
   quad-car
   quads->page
   piece
   word-break
-  whitespace?
-  optical-kern?
   optical-kern
   word
   quads->line
   quad->string
   quads->block
+  ;; -- from quad-types.rkt
+  page-break?
+  column-break?
+  block-break?
+  optical-kern?
+  spacer?
+  run?
+  line?
+  word?
+  word-break?
  )
 
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
- "../base/core.rkt"
- (only-in racket/string string-append*))
+  racket/list
+ (only-in racket/string string-append*)
+ (only-in "../base/core-types.rkt"
+   quad? QuadAttrKey? QuadAttrValue? QuadAttrs?)
+ (only-in "../base/quad-types.rkt"
+   optical-kern? spacer? run? line? word? word-break? block-break? column-break? page-break?)
+ "../base/untyped.rkt")
 
 ;; =============================================================================
 
@@ -53,10 +60,7 @@
   (car q))
 
 (define (quad-attrs q)
-  (cond
-    [(eq? '() q) '()] ;;bg also very bad
-    [(eq? '() (cdr q)) '()] ;;bg do not understand, this is bad
-    [else (car (cdr q))]))
+  (car (cdr q)))
 
 (define (make-quadattr k v)
   (cons k v))
@@ -65,16 +69,16 @@
   (cdr qa))
 
 (define (quad-attr-keys qas)
-  (if (eq? '() qas)
+  (if (empty? qas)
       qas
       (map car qas)))
 
 (define (quad-list q)
   (cdr (cdr q)))
 
+;; Because quad-list case-lam cannot be converted to a contract; 2 arity-1 cases
 (define (group-quad-list q)
   (cdr (cdr q)))
-
 
 (define (quad-attr-ref q-or-qas key [default attr-missing])
   (define qas (if (quad? q-or-qas) (quad-attrs q-or-qas) q-or-qas))
@@ -88,21 +92,21 @@
 (define attr-missing (gensym))
 
 (define (quad->string x)
-  (let loop  ([x x])
+  (let loop ((x x))
     (cond
       [(string? x) x]
       ;; else branch relies on fact that x is either Quad or String
       [else (string-append* (map loop (quad-list x)))])))
 
 (define (gather-common-attrs qs)
-  (if (eq? '() qs)
+  (if (null? qs)
       qs
       (let loop
         ([qs qs]
          ;; start with the set of pairs in the first quad, then filter it down
-         [candidate-attr-pairs  (let ([first-attrs (quad-attrs (car qs))])
+         [candidate-attr-pairs (let ([first-attrs (quad-attrs (car qs))])
                                                      (if first-attrs
-                                                         (for/fold ([caps  null]) ([cap (in-list first-attrs)])
+                                                         (for/fold ([caps null]) ([cap (in-list first-attrs)])
                                                            (if (member (car cap) cannot-be-common-attrs)
                                                                caps
                                                                (cons cap caps)))
@@ -111,21 +115,21 @@
           [(null? candidate-attr-pairs) null] ; ran out of possible pairs, so return #f
           [(null? qs) candidate-attr-pairs] ; ran out of quads, so return common-attr-pairs
           ;; todo: reconsider type interface between output of this function and input to quadattrs
-          [else (loop (cdr qs) (filter (λ(cap ) (member cap (quad-attrs (car qs)))) candidate-attr-pairs))]))))
+          [else (loop (cdr qs) (filter (λ(cap) (member cap (quad-attrs (car qs)))) candidate-attr-pairs))]))))
 
 (define (make-quadattrs xs)
   ;; no point typing the input as (U QuadAttrKey QuadAttrValue)
   ;; because QuadAttrValue is Any, so that's the same as plain Any
   (let-values ([(ks vs even?) (for/fold
-                               ([ks  null][vs  null][even?  #t])
+                               ([ks  null][vs null][even? #t])
                                ([x (in-list xs)])
-                                (if (and even? (symbol? x))
+                                (if (and even? (QuadAttrKey? x))
                                     (values (cons x ks) vs #f)
-                                    (values ks (cons x vs) #t)))])
+                                    (values ks (cons (assert x QuadAttrValue?) vs) #t)))])
     (when (not even?) (error 'quadattrs "odd number of elements in ~a" xs))
     ;; use for/fold rather than for/list to impliedly reverse the list
     ;; (having been reversed once above, this puts it back in order)
-    (for/fold ([qas  null])([k (in-list ks)][v (in-list vs)])
+    (for/fold ([qas null])([k (in-list ks)][v (in-list vs)])
       (cons (make-quadattr k v) qas))))
 
 (define (whitespace? x [nbsp? #f])
@@ -133,7 +137,7 @@
     [(quad? x) (whitespace? (quad-list x) nbsp?)]
     [(string? x) (or (and (regexp-match #px"\\p{Zs}" x) ; Zs = unicode whitespace category
                           (or nbsp? (not (regexp-match #px"\u00a0" x)))))] ; 00a0: nbsp
-    [(list? x) (and (not (eq? '() x)) (andmap (λ(x) (whitespace? x nbsp?)) x))] ; andmap returns #t for empty lists
+    [(list? x) (and (not (empty? x)) (andmap (λ(x) (whitespace? x nbsp?)) x))] ; andmap returns #t for empty lists
     [else #f]))
 
 (define (whitespace/nbsp? x)
@@ -141,103 +145,74 @@
 
 (define (quad-car q)
   (define ql (quad-list q))
-  (if (not (eq? '() ql))
-      ( car ql)
+  (if (not (empty? ql))
+      (car ql)
       (error 'quad-car "quad-list empty")))
 
 (define (quad-has-attr? q key)
-  (and ( member key (quad-attr-keys (quad-attrs q))) #t))
-
-(define (word-string c) (car (quad-list c)))
+  (and (member key (quad-attr-keys (quad-attrs q))) #t))
 
 ;; -----------------------------------------------------------------------------
 
-(define (box? x)
-  (and (quad? x) (equal? (quad-name x) 'box)))
 (define (box attrs . xs)
-  (quad 'box (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'box (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (run? x)
-  (and (quad? x) (equal? (quad-name x) 'run)))
-
-(define (spacer? x)
-  (and (quad? x) (equal? (quad-name x) 'spacer)))
 (define (spacer attrs . xs)
-  (quad 'spacer (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'spacer (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (doc? x)
-  (and (quad? x) (equal? (quad-name x) 'doc)))
 (define (doc attrs . xs)
-  (quad 'doc (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'doc (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 (define (quads->doc qs)
   (apply doc (gather-common-attrs qs) qs))
 
-(define (optical-kern? x)
-  (and (quad? x) (equal? (quad-name x) 'optical-kern)))
 (define (optical-kern attrs . xs)
-  (quad 'optical-kern (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'optical-kern (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (piece? x)
-  (and (quad? x) (equal? (quad-name x) 'piece)))
 (define (piece attrs . xs)
-  (quad 'piece (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'piece (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (word? x)
-  (and (quad? x) (equal? (quad-name x) 'word)))
 (define (word attrs . xs)
-  (quad 'word (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'word (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (word-break? x)
-  (and (quad? x) (equal? (quad-name x) 'word-break)))
 (define (word-break attrs . xs)
-  (quad 'word-break (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'word-break (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (page-break? x)
-  (and (quad? x) (equal? (quad-name x) 'page-break)))
+(define (word-string c)
+  (define ql (quad-list c))
+  (if (and (not (null? ql)) (string? (car ql)))
+      (car ql)
+      ""))
+
+;;bg: first argument should be optional, but type error
+(define (page attrs . xs)
+  (quad 'page (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
 (define (page-break)
   (define attrs '()) (define xs '())
-  (quad 'page-break (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
-
-(define (column? x)
-  (and (quad? x) (equal? (quad-name x) 'column)))
-
-(define (column-break? x)
-  (and (quad? x) (equal? (quad-name x) 'column-break)))
-
-(define (block-break? x)
-  (and (quad? x) (equal? (quad-name x) block-break)))
-
-(define (block-break attrs . xs)
-  (quad 'block-break (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
-
-(define (page attrs . xs)
-  (quad 'page (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
-
-(define (column attrs . xs)
-  (quad 'column (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'page-break (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
 (define (quads->page qs)
   (apply page (gather-common-attrs qs) qs))
 
+(define (column attrs . xs)
+  (quad 'column (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 (define (quads->column qs)
   (apply column (gather-common-attrs qs) qs))
 
 (define (column-break)
   (define attrs '()) (define xs '())
-  (quad 'column-break (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'column-break (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 
-(define (line? x)
-  (and (quad? x) (equal? 'line (quad-name x))))
+;;bg: first argument should be optional, but type error
 (define (line attrs . xs)
-  (quad 'line (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'line (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 (define (quads->line qs)
   (apply line (gather-common-attrs qs) qs))
 
-(define (block? x)
-  (and (quad? x) (equal? 'block (quad-name x))))
 (define (block attrs . xs)
-  (quad 'block (if (quad-attrs? attrs) attrs (make-quadattrs attrs)) xs))
+  (quad 'block (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))
 (define (quads->block qs)
   (apply block (gather-common-attrs qs) qs))
 
+(define (block-break attrs . xs)
+  (quad 'block-break (if (QuadAttrs? attrs) attrs (make-quadattrs attrs)) xs))

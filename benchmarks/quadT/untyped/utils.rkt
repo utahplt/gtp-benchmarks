@@ -7,11 +7,11 @@
   add-vert-positions
   compute-line-height
   quad-attr-set
-  (rename-out (quad-attr-set group-quad-attr-set))
+  group-quad-attr-set
   quad-attr-set*
   group-quad-attr-set*
   quad-attr-remove*
-  (rename-out (quad-attr-remove* group-quad-attr-remove*))
+  group-quad-attr-remove*
   merge-attrs
   flatten-quad
   flatten-quadtree
@@ -24,26 +24,29 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  require-typed-check
-  "../base/core.rkt"
+  (only-in "../base/core-types.rkt"
+    quad? quad-attrs?)
+  #;"../base/quad-types.rkt"
+  "../base/untyped.rkt"
   (only-in racket/list append-map empty? empty split-at-right first splitf-at)
   (only-in racket/string string-append*)
   (only-in math/flonum fl+)
-(only-in "hyphenate.rkt"
-  hyphenate)
-(only-in "measure.rkt"
-  round-float)
-(only-in "quads.rkt"
+)
+(require (only-in "hyphenate.rkt"
+  hyphenate))
+(require (only-in "measure.rkt"
+   round-float))
+(require (only-in "quads.rkt"
   word
   quad-name
   quad-attrs
   make-quadattrs
   quad-list
+  group-quad-list
   box
-  quad-attr-ref
   whitespace/nbsp?
-)
-(only-in "world.rkt"
+  quad-attr-ref))
+(require (only-in "world.rkt"
   world:font-size-key
   world:font-size-default
   world:font-name-key
@@ -84,7 +87,6 @@
 
 ;;; flatten merges attributes, but applies special logic suitable to flattening
 ;;; for instance, resolving x and y coordinates.
-;(define-type QuadAttrFloatPair (Pairof QuadAttrKey Float))
 
 (define (flatten-attrs . joinable-items)
   (define all-attrs (join-attrs joinable-items))
@@ -111,7 +113,7 @@
 ;; and flatten will go too far.
 ;; this version adds a check for quadness to the flattener.
 (define (flatten-quadtree quad-tree)
-  (let loop ([sexp quad-tree][acc null])
+  (let loop ([sexp quad-tree][acc  null])
     (cond [(null? sexp) acc]
           [(quad? sexp) (cons sexp acc)]
           [else (loop (car sexp) (loop (cdr sexp) acc))])))
@@ -121,8 +123,8 @@
 ;; resulting in a flat list of quads.
 (define (flatten-quad q)
   (flatten-quadtree
-   (let loop 
-     ([x  q][parent  (quad 'null '() '())])
+   (let loop
+     ([x q][parent (quad 'null '() '())])
      (cond
        [(quad? x)
         (let ([x-with-parent-attrs (quad (quad-name x)
@@ -131,7 +133,7 @@
 
           (if (empty? (quad-list x))
               x-with-parent-attrs ; no subelements, so stop here
-              ( map (λ(xi) (loop xi x-with-parent-attrs)) (quad-list x))))] ; replace quad with its elements
+              (map (λ(xi) (loop xi x-with-parent-attrs)) (quad-list x))))] ; replace quad with its elements
        [else ;; it's a string
         (quad (quad-name parent) (quad-attrs parent) (list x))]))))
 
@@ -144,10 +146,11 @@
       [(quad? x)
        (if (empty? (quad-list x))
            x ; no subelements, so stop here
-           ( map (λ(xi) (do-explode xi x)) (quad-list x)))] ; replace quad with its elements, exploded
+           (map (λ(xi) (do-explode xi x)) (quad-list x)))] ; replace quad with its elements, exploded
       [else ;; it's a string
        (map (λ(xc) (quad world:split-quad-key (quad-attrs parent) (list xc))) (regexp-match* #px"." x))]))
   (flatten-quadtree (map do-explode (flatten-quad q))))
+
 
 
 ;; merge chars into words (and boxes), leave the rest
@@ -163,13 +166,13 @@
                                ;; this way, a nonexistent value will test true against a default value.
                                (andmap (λ(key default) (equal? (quad-attr-ref base-q key default) (quad-attr-ref q key default)))
                                        (list world:font-name-key
-                                                  world:font-size-key
-                                                  world:font-weight-key
-                                                  world:font-style-key)
+                                             world:font-size-key
+                                             world:font-weight-key
+                                             world:font-style-key)
                                        (list (world:font-name-default)
-                                                  (world:font-size-default)
-                                                  (world:font-weight-default)
-                                                  (world:font-style-default))))))])
+                                             (world:font-size-default)
+                                             (world:font-weight-default)
+                                             (world:font-style-default))))))])
     (let loop ([qs qs-in][acc null])
       (if (null? qs)
           (reverse acc)
@@ -202,15 +205,18 @@
 ;; functionally update a quad attr. Similar to hash-set
 (define (quad-attr-set q k v)
   (quad-attr-set* q (list k v)))
+(define (group-quad-attr-set q k v)
+  (group-quad-attr-set* q (list k v)))
 
 
 ;; functionally update multiple quad attrs. Similar to hash-set*
 (define (quad-attr-set* q kvs)
   (quad (quad-name q) (attr-change (quad-attrs q) kvs) (quad-list q)))
-
 (define (group-quad-attr-set* q kvs)
-  (quad (quad-name q) (attr-change (quad-attrs q) kvs) (quad-list q)))
-
+  (quad
+    (quad-name q)
+    (attr-change (quad-attrs q) kvs)
+    (group-quad-list q)))
 
 ;; functionally remove multiple quad attrs. Similar to hash-remove*
 (define (quad-attr-remove* q . ks)
@@ -218,20 +224,29 @@
       ;; test all ks as a set so that iteration through attrs only happens once
       (quad (quad-name q) (apply attr-delete (quad-attrs q) ks) (quad-list q))
       q))
+(define (group-quad-attr-remove* q . ks)
+  (if (not (empty? (quad-attrs q)))
+      ;; test all ks as a set so that iteration through attrs only happens once
+      (quad (quad-name q) (apply attr-delete (quad-attrs q) ks) (group-quad-list q))
+      q))
 
-;; todo how to guarantee line has leading key?
+;; todo: how to guarantee line has leading key?
 (define (compute-line-height line)
   (quad-attr-set line world:height-key
     (quad-attr-ref line world:leading-key (world:leading-key-default))))
 
+;(define/typed (fixed-height? q)
+;  (Quad -> Boolean)
+;  (quad-has-attr? q world:height-key))
+
 (define (quad-height q)
-  (quad-attr-ref q world:height-key 0.0))
+  (assert (quad-attr-ref q world:height-key 0.0) flonum?))
 
 ;; use heights to compute vertical positions
 (define (add-vert-positions starting-quad)
   (define-values (new-quads final-height)
-    (for/fold ([new-quads empty][height-so-far  0.0])
-              ([q (in-list (quad-list starting-quad))])
+    (for/fold ([new-quads empty][height-so-far 0.0])
+              ([q (in-list (group-quad-list starting-quad))])
       (values (cons (quad-attr-set q world:y-position-key height-so-far) new-quads)
               (round-float (+ height-so-far (quad-height q))))))
   (quad (quad-name starting-quad) (quad-attrs starting-quad) (reverse new-quads)))

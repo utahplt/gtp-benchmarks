@@ -48,7 +48,7 @@
 (require
  require-typed-check
  (only-in racket/string string-append*)
- "../base/lib-typed.rkt"
+ racket/list
  "../base/quad-types.rkt"
  "../base/core-types.rkt")
 

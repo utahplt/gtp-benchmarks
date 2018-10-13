@@ -7,7 +7,15 @@
   set-$ocm-min-row-indices!
   set-$ocm-finished!
   set-$ocm-base!
+  entry-type?
+  index-type?
+  entry->value-type/c
 )
+
+(require
+  "../base/untyped.rkt"
+  (only-in racket/contract ->)
+  racket/math)
 
 ;; =============================================================================
 
@@ -21,3 +29,10 @@
    tentative)
 #:transparent #:mutable)
 
+;; -----------------------------------------------------------------------------
+
+(define index-type? nonnegative-integer?)
+(define entry-type? any?)
+(define value-type? flonum?)
+(define entry->value-type/c
+  (-> entry-type? value-type?))

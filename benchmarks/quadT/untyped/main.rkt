@@ -5,17 +5,17 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
- (only-in racket/class new send)
-(only-in "world.rkt"
+ (only-in typed/racket/class new send)
+)
+(require (only-in "world.rkt"
   world:allow-hyphenated-last-word-in-paragraph
   world:quality-default
-  world:draft-quality)
-(only-in "quad-main.rkt"
-  typeset)
-(only-in "quick-sample.rkt"
-  quick-sample)
-(only-in "render.rkt"
+  world:draft-quality))
+(require (only-in "quad-main.rkt"
+  typeset))
+(require (only-in "quick-sample.rkt"
+  quick-sample))
+(require (only-in "render.rkt"
   pdf-renderer%))
 
 ;; =============================================================================

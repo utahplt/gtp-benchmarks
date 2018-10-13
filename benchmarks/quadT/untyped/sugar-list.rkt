@@ -21,7 +21,7 @@
      (slice-at xs len #f)]
     [(xs len force?)
      (define-values (last-list list-of-lists)
-       (for/fold ([current-list '()][list-of-lists  '()])
+       (for/fold ([current-list '()][list-of-lists '()])
                   ([x (in-list xs)][i (in-naturals)])
          (if (= (modulo (add1 i) len) 0)
              (values '() (cons (reverse (cons x current-list)) list-of-lists))
@@ -32,7 +32,7 @@
 
 (define (break-at xs bps)
   (let ([bps (if (list? bps) bps (list bps))]) ; coerce bps to list
-    (when (ormap (λ(bp) (>= bp (length xs))) bps)
+    (when (ormap (λ (bp) (>= bp (length xs))) bps)
       (error 'break-at (format "breakpoint in ~v is greater than or equal to input list length = ~a" bps (length xs))))
     ;; easier to do back to front, because then the list index for each item won't change during the recursion
     ;; cons a zero onto bps (which may already start with zero) and then use that as the terminating condition
@@ -45,7 +45,7 @@
 
 (define (slicef-after xs pred)
   (define-values (last-list list-of-lists)
-    (for/fold ([current-list empty][list-of-lists empty])
+    (for/fold ([current-list  empty][list-of-lists empty])
                ([x (in-list xs)])
       (if (pred x)
           (values empty (cons (reverse (cons x current-list)) list-of-lists))
@@ -61,7 +61,7 @@
     [(xs how-fars fill-item)
      (shifts xs how-fars fill-item #f)]
     [(xs how-fars fill-item cycle)
-     (map (λ(how-far) (shift xs how-far fill-item cycle)) how-fars)]))
+     (map (λ (how-far) (shift xs how-far fill-item cycle)) how-fars)]))
 
 (define shift
   (case-lambda

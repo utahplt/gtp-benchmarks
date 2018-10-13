@@ -12,8 +12,9 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  require-typed-check
-  "../base/core.rkt"
+  (only-in "../base/quad-types.rkt" word? word-break? run? line? optical-kern? spacer?)
+  (only-in "../base/core-types.rkt" Font-Name? Font-Size? Font-Weight? Font-Style? quad? Breakpoint?)
+  "../base/untyped.rkt"
   "ocm-struct.rkt"
   "penalty-struct.rkt"
   (only-in math/flonum fl+ fl= fl fl/ fl- fl> fl* fllog flabs flmax flexpt)
@@ -23,35 +24,29 @@
   (for-syntax
     racket/base
     (only-in racket/syntax format-id)
-    (only-in racket/string string-trim))
-(only-in "measure.rkt"
+    (only-in racket/string string-trim)))
+(require (only-in "measure.rkt"
   measure-ascent
   measure-text
-  round-float)
-(only-in "quads.rkt"
+  round-float))
+(require (only-in "quads.rkt"
   quads->line
   quad-attrs
   quad-name
-  line?
   quad-attr-ref
-  word?
   quad->string
   optical-kern
-  optical-kern?
   word-break
   piece
   line
   whitespace/nbsp?
   whitespace?
-  spacer?
-  run?
-  word-break?
   word-string
-  quad-list
   group-quad-list
+  quad-list
   spacer
-  quad-has-attr?)
-(only-in "world.rkt"
+  quad-has-attr?))
+(require (only-in "world.rkt"
   world:last-line-can-be-short
   world:new-line-penalty
   world:hyphen-penalty
@@ -89,8 +84,8 @@
   world:horiz-alignment-default
   world:width-key
   world:x-position-key
-  world:y-position-key)
-(only-in "utils.rkt"
+  world:y-position-key))
+(require (only-in "utils.rkt"
  attr-change
  join-quads
  attr-delete
@@ -99,13 +94,14 @@
  merge-attrs
  group-quad-attr-remove*
  quad-attr-remove*
- quad-attr-set)
-(only-in "ocm.rkt"
+ quad-attr-set
+ group-quad-attr-set))
+(require (only-in "ocm.rkt"
   make-ocm
   ocm-min-index
-  ocm-min-entry)
-(only-in "sugar-list.rkt"
-  shifts
+  ocm-min-entry))
+(require (only-in "sugar-list.rkt"
+ shifts
  slicef-after
  break-at))
 
@@ -197,11 +193,11 @@
 ;; extract font attributes from quad, or get default values
 (define (font-attributes-with-defaults q)
   (list
-   (let ([size (quad-attr-ref q world:font-size-key)])
-             (if (exact-integer? size) (fl size) size))
-   (quad-attr-ref/parameter q world:font-name-key)
-   (quad-attr-ref/parameter q world:font-weight-key)
-   (quad-attr-ref/parameter q world:font-style-key)))
+   (assert (let ([size (quad-attr-ref q world:font-size-key)])
+             (if (exact-integer? size) (fl size) size)) Font-Size?)
+   (assert (quad-attr-ref/parameter q world:font-name-key) Font-Name?)
+   (assert (quad-attr-ref/parameter q world:font-weight-key) Font-Weight?)
+   (assert (quad-attr-ref/parameter q world:font-style-key) Font-Style?)))
 
 ;;; get the width of a quad.
 ;;; Try the attr first, and if it's not available, compute the width.
@@ -209,7 +205,7 @@
 ;;; not designed to update the source quad.
 (define (quad-width q)
   (cond
-    [(quad-has-attr? q world:width-key) (fl (quad-attr-ref q world:width-key))]
+    [(quad-has-attr? q world:width-key) (fl (assert (quad-attr-ref q world:width-key) flonum?))]
     [(ormap (λ(pred) (pred q)) (list char? run? word? word-break?))
      (apply measure-text (word-string q)
             (font-attributes-with-defaults q))]
@@ -241,7 +237,7 @@
   ;; only needs it if the appearance of the piece changes based on location.
   ;; so words are likely to have a word-break item; boxes not.
   ;; the word break item contains the different characters needed to finish the piece.
-  (define the-word-break (quad-attr-ref p world:word-break-key #f))
+  (define the-word-break (assert (quad-attr-ref p world:word-break-key #f) (λ(v) (or (eq? #f v) (word-break? v)))))
   (let ([p (apply piece (attr-delete (quad-attrs p) world:word-break-key) (group-quad-list p))]) ; so it doesn't propagate into subquads
     (if the-word-break
         (apply piece (quad-attrs p)
@@ -264,7 +260,7 @@
 (define (render-word-break wb key)
   (let ([break-char (quad-attr-ref wb key)])
     (quad (if (whitespace? break-char) 'word-break 'word)
-          (quad-attrs (quad-attr-remove* wb world:no-break-key world:before-break-key)) (list (quad-attr-ref wb key)))))
+          (quad-attrs (quad-attr-remove* wb world:no-break-key world:before-break-key)) (list (assert (quad-attr-ref wb key) string?)))))
 
 ;; uses macro above in no-break mode.
 (define (word-break->no-break wb)
@@ -276,8 +272,8 @@
 
 ;; is this the last line? compare current line-idx to total lines
 (define (last-line? line)
-  (define line-idx (quad-attr-ref line world:line-index-key #f))
-  (define lines (quad-attr-ref line world:total-lines-key #f))
+  (define line-idx (assert (quad-attr-ref line world:line-index-key #f) index?))
+  (define lines (assert (quad-attr-ref line world:total-lines-key #f) index?))
   (and line-idx lines (= (add1 line-idx) lines)))
 
 ;; optical kerns are automatically inserted at the beginning and end of a line
@@ -374,14 +370,14 @@
   (cond
     [(not (empty? rendered-pieces))
      ;; handle optical kerns here to avoid resplitting and rejoining later.
-     (define line-quads (append-map group-quad-list rendered-pieces))
+     (define line-quads (assert (append-map group-quad-list rendered-pieces) (λ(lqs) (not (empty? lqs)))))
      (define line-quads-maybe-with-opticals
        (if world:use-optical-kerns?
            (render-optical-kerns
             (let ([my-ok (list (optical-kern (quad-attrs (first line-quads))))]) ; take attrs from line, incl measure
               (append my-ok line-quads my-ok)))
            line-quads))
-     (define merged-quads (join-quads line-quads-maybe-with-opticals))
+     (define merged-quads (assert (join-quads line-quads-maybe-with-opticals) (λ(mqs) (not (empty? mqs)))))
      (define merged-quad-widths (map measure-quad-proc merged-quads)) ; 10% of function time
 
      ;(log-quad-debug "making pieces into line = ~v" (apply string-append (map quad->string merged-quads)))
@@ -412,7 +408,7 @@
                find-breakpoints-proc)
   (λ(qs [measure #f])
     (if (not (empty? qs))
-        (let* ([measure (or measure (quad-attr-ref/parameter (car qs) world:measure-key))]
+        (let* ([measure (or measure (assert (quad-attr-ref/parameter (car qs) world:measure-key) flonum?))]
                [qs (if (quad-has-attr? (car qs) world:measure-key)
                        qs
                        (map (λ(q) (quad-attr-set q world:measure-key measure)) qs))])
@@ -426,16 +422,16 @@
 (define (make-piece-vectors pieces)
   (define pieces-measured
     (for/list ([p (in-vector pieces)])
-      (define wb (quad-attr-ref p world:word-break-key #f))
+      (define wb (assert (quad-attr-ref p world:word-break-key #f) (λ(wb) (or (eq? #f wb) (quad? wb)))))
       (vector
        ;; throw in 0.0 in case for/list returns empty
-       (foldl fl+ 0.0 (for/list  ([q (in-list (group-quad-list p))])
+       (foldl fl+ 0.0 (for/list ([q (in-list (group-quad-list p))])
                         (define str (quad->string q))
                         (if (equal? str "")
-                             (quad-attr-ref q world:width-key 0.0)
+                            (assert (quad-attr-ref q world:width-key 0.0) flonum?)
                             (apply measure-text (quad->string q) (font-attributes-with-defaults q)))))
-       (if wb (apply measure-text (quad-attr-ref wb world:no-break-key) (font-attributes-with-defaults wb)) 0.0)
-       (if wb (apply measure-text (quad-attr-ref wb world:before-break-key) (font-attributes-with-defaults wb)) 0.0))))
+       (if wb (apply measure-text (assert (quad-attr-ref wb world:no-break-key) string?) (font-attributes-with-defaults wb)) 0.0)
+       (if wb (apply measure-text (assert (quad-attr-ref wb world:before-break-key) string?) (font-attributes-with-defaults wb)) 0.0))))
   (values
    (for/vector ([p (in-list pieces-measured)])
      (fl+ (vector-ref p 0) (vector-ref p 1))) ; first = word length, second = nb length
@@ -454,19 +450,19 @@
 ;; first-fit and best-fit are variants.
 (define (adaptive-fit-proc pieces measure [use-first? #t] [use-best? #t])
   ;; this is the winning performance strategy: extract the numbers first, then just wrap on those.
-  ;; todo how to avoid re-measuring pieces later?
-  ;; todo how to retain information about words per line and hyphen at end?
+  ;; todo: how to avoid re-measuring pieces later?
+  ;; todo: how to retain information about words per line and hyphen at end?
   (define-values (pieces-rendered-widths pieces-rendered-before-break-widths)
     (make-piece-vectors pieces))
-  (define pieces-with-word-space (vector-map (λ(piece ) (and (quad-has-attr? piece world:word-break-key) (equal? (quad-attr-ref  (quad-attr-ref piece world:word-break-key) world:no-break-key) " "))) pieces))
+  (define pieces-with-word-space (vector-map (λ(piece) (and (quad-has-attr? piece world:word-break-key) (equal? (quad-attr-ref (assert (quad-attr-ref piece world:word-break-key) quad?) world:no-break-key) " "))) pieces))
   (define (make-first-fit-bps-and-widths)
     (define-values (reversed-bps reversed-widths)
       ;; breakpoints get stacked onto bps, so (car bps) is always the next starting point
       ;; thus use '(0) as a starting value to indicate that the first line starts at bp 0
       ;; bps will end up with at least two values (if all pieces fit on first line, bps = 0 and last bp)
       (for/fold ([bps '(0) ]
-                 [line-widths  empty])
-                ([j-1  (in-range (vector-length pieces))])
+                 [line-widths empty])
+                ([j-1 (in-range (vector-length pieces))])
         (define line-starting-bp (car bps))
         (define line-width (get-line-width (make-trial-line pieces-rendered-widths
                                                             pieces-rendered-before-break-widths
@@ -483,7 +479,7 @@
       [else ; only measure middle lines. we know bps has at least 2 bps
        (define looseness-stddev (fl (stddev (map (λ(x) (calc-looseness x measure)) (drop-right (drop trial-line-widths 1) 1)))))
        (define piece-count (vector-length pieces-rendered-widths))
-       (define pieces-per-line (/ piece-count (sub1 line-count))) ; todo more accurate to count only pieces in middle
+       (define pieces-per-line (/ piece-count (sub1 line-count))) ; todo: more accurate to count only pieces in middle
        (foldl fl+ 0.0 (list 2.2 (fllog (flabs looseness-stddev)) (fl* 0.09 (fl pieces-per-line))))])) ; the FU FORMULA
 
   ;; only buy first-fit-bps if use-first? is true.
@@ -492,9 +488,9 @@
 
   (cond
     ;; possible outcomes at this branch:
-    ;; adaptive wrap use-first and use-best are true, so first-fit-bps will exist, and fu-formula will be used.
-    ;; first-fit wrap use-first is true but not use-best. So first-fit-bps will be returned regardless.
-    ;; best-fit wrap use-first is false but use-best is true. So first-fit-bps will be skipped, and move on to best-fit.
+    ;; adaptive wrap: use-first and use-best are true, so first-fit-bps will exist, and fu-formula will be used.
+    ;; first-fit wrap: use-first is true but not use-best. So first-fit-bps will be returned regardless.
+    ;; best-fit wrap: use-first is false but use-best is true. So first-fit-bps will be skipped, and move on to best-fit.
     [(and use-first? (if use-best? (fl> (fu-formula) 0.0) #t))
      ;(log-quad-debug "first-fit breakpoints = ~a" first-fit-bps)
      first-fit-bps]
@@ -509,11 +505,11 @@
               (> j (vector-length pieces))) ; exceeds available pieces
           ($penalty 0 (fl* -1.0 (fl i)))] ; ocm out of bounds signal
          [else
-          (define penalty-up-to-i (ocm-min-entry ocm i)) ;;bg min-entry or min-value?
+          (define penalty-up-to-i (assert (ocm-min-entry ocm i) $penalty?)) ;;bg min-entry or min-value?
           (define last-piece-to-test (vector-ref pieces (sub1 j)))
           (define new-hyphen?
             (and (quad-has-attr? last-piece-to-test world:word-break-key)
-                 (equal? (quad-attr-ref (quad-attr-ref last-piece-to-test world:word-break-key) world:before-break-key) "-")))
+                 (equal? (assert (quad-attr-ref (assert (quad-attr-ref last-piece-to-test world:word-break-key) quad?) world:before-break-key) string?) "-")))
           (define cumulative-hyphens (if (not new-hyphen?)
                                          0
                                          (add1 ($penalty-hyphens penalty-up-to-i))))
@@ -528,7 +524,7 @@
                       ($penalty->value penalty-up-to-i)
                       (let ([line-width (get-line-width (make-trial-line pieces-rendered-widths pieces-rendered-before-break-widths i j))])
                         (cond
-                          ;; overfull line huge penalty prevents break; multiplier is essential for monotonicity.
+                          ;; overfull line: huge penalty prevents break; multiplier is essential for monotonicity.
                           ;; multiply by -1 because line-width is longer than measure, thus diff is negative
                           [(fl> line-width (fl* world:allowed-overfull-ratio measure))
                            (fl* (fl- line-width measure) (flexpt 10.0 7.0))]
@@ -541,15 +537,15 @@
                           ;[(< (length pieces-to-test) (world:minimum-last-line-pieces)) 50000]
                           [else 0.0]))))))]))
 
-     (define ocm  (make-ocm penalty $penalty->value initial-value))
+     (define ocm (make-ocm penalty (assert $penalty->value entry->value-type/c) initial-value))
 
      ;; starting from last position, ask ocm for position of row minimum (= new-pos)
      ;; collect this value, and use it as the input next time
      ;; until you reach first position.
      (define first-position 0)
      (define last-position (vector-length pieces))
-     (define result (let loop  ([pos  last-position][acc  null])
-                      (let ([next-pos (ocm-min-index ocm pos)]) ; first look ahead ...
+     (define result (let loop ([pos last-position] [acc null])
+                      (let ([next-pos (assert (ocm-min-index ocm pos) Breakpoint?)]) ; first look ahead ...
                         (if (= next-pos first-position) ; therefore we're done
                             acc
                             (loop next-pos (cons next-pos acc))))))
@@ -561,14 +557,14 @@
                             make-pieces
                             quad-width
                             pieces->line
-                            (λ(x y ) (adaptive-fit-proc x y #t #f))))
+                            (λ(x y) (adaptive-fit-proc x y #t #f))))
 
 ;; wrap proc based on penalty function
 (define wrap-best (make-wrap-proc
                            make-pieces
                            quad-width
                            pieces->line
-                           (λ(x y ) (adaptive-fit-proc x y #f #t)))) ; note difference in boolean args
+                           (λ(x y) (adaptive-fit-proc x y #f #t)))) ; note difference in boolean args
 
 (define wrap-adaptive (make-wrap-proc
                                make-pieces
@@ -577,10 +573,10 @@
                                adaptive-fit-proc))
 
 ;; build quad out to a given width by distributing excess into spacers
-;; todo adjust this to work recursively, so that fill operation cascades down
+;; todo: adjust this to work recursively, so that fill operation cascades down
 ;; and broaden type from just LineQuad
 (define (fill starting-quad [target-width? #f])
-  (define target-width (or target-width? (quad-attr-ref starting-quad world:measure-key)))
+  (define target-width (or target-width? (assert (quad-attr-ref starting-quad world:measure-key) flonum?)))
   (define subquads (group-quad-list starting-quad))
   (define-values (flexible-subquads fixed-subquads) (partition spacer? subquads)) ; only puts fill into spacers.
   (define width-used (foldl fl+ 0.0 (map quad-width fixed-subquads)))
@@ -588,7 +584,7 @@
   (cond
     ;; check for zero condition because we want to divide by this number
     ;; if there's no spacers, put one in
-    ;; todo go in two rounds, once for word spacers, and once for line spacers?
+    ;; todo: go in two rounds, once for word spacers, and once for line spacers?
     ;; or separate the line alignment & word-spacing properties?
     [(fl= 0.0 (fl (length flexible-subquads))) (fill (insert-spacers-in-line starting-quad (world:horiz-alignment-default)) target-width)]
     [else (define width-per-flexible-quad (round-float (fl/ width-remaining (fl (length flexible-subquads)))))
@@ -599,9 +595,8 @@
 
 
 ;; add x positions to a list of fixed-width quads
-;; todo adjust this to work recursively, so that positioning operation cascades down
 (define (add-horiz-positions starting-quad)
   (define-values (new-quads final-width)
-    (for/fold ([new-quads  empty][width-so-far  0.0])([q (in-list (group-quad-list starting-quad))])
+    (for/fold ([new-quads empty][width-so-far 0.0])([q (in-list (group-quad-list starting-quad))])
       (values (cons (quad-attr-set q world:x-position-key width-so-far) new-quads) (round-float (fl+ (quad-width q) width-so-far)))))
   (quad (quad-name starting-quad) (quad-attrs starting-quad) (reverse new-quads)))

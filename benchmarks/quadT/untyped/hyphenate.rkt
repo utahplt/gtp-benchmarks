@@ -10,18 +10,16 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
+  "../base/untyped.rkt"
  (only-in racket/string string-replace string-join)
  (only-in racket/list partition drop-right drop make-list filter-not take splitf-at))
 
 ;; -----------------------------------------------------------------------------
 ;; (require (only-in "exceptions.rkt" default-exceptions))
-;(: default-exceptions (Listof Symbol))
 (define default-exceptions '(as-so-ciate as-so-ciates dec-li-na-tion oblig-a-tory phil-an-thropic present presents project projects reci-procity re-cog-ni-zance ref-or-ma-tion ret-ri-bu-tion ta-ble))
 
 ;; -----------------------------------------------------------------------------
 ;; (require (only-in "patterns-hashed.rkt" hashed-patterns))
-;(: hashed-patterns (HashTable String (Listof Index)))
 (define hashed-patterns
   '#hash(("ripl" . (0 0 2 0 0))
        ("erent" . (0 0 3 0 0 0))
@@ -4966,10 +4964,6 @@
 ;; bg: utilities for working with type Index
 ;; maybe we could drop these and go with type Integer everywhere
 
-(define (index? x)
-  (and (<= 0 x)
-       (< x 9999999999999)))
-
 (define (max-index a b)
   (if (<= a b) b a))
 
@@ -4977,7 +4971,7 @@
   (if (<= a b) a b))
 
 (define (max-indexes xs)
-  (for/fold  ([init (car xs)]) ([next  (in-list (cdr xs))])
+  (for/fold ([init  (car xs)]) ([next  (in-list (cdr xs))])
             (max-index init next)))
 
 (define (assert-index i)
@@ -5134,7 +5128,7 @@
         ;;     The temp-list collects characters until we reach a syllable.
         ;;     At that point, the temp-list is cons'd to the final-list and
         ;;     we initialize a fresh temp-list.
-        ([acc
+        ([acc 
                 (cons '() '())])
         ([char
                 (in-string word)]
@@ -5175,7 +5169,7 @@
                                #:omit-word [omit-word? (λ(x) #f)]
                                #:omit-string [omit-string? (λ(x) #f)])
   (initialize-patterns) ; reset everything each time hyphenate is called
-  (for ([sym extra-exceptions]) (add-exception sym))
+  (for ([sym  extra-exceptions]) (add-exception sym))
   (define joiner-string (joiner->string joiner))
   ;; todo?: connect this regexp pattern to the one used in word? predicate
   (define word-pattern #px"\\w+") ;; more restrictive than exception-word

@@ -5,12 +5,15 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
+ (only-in "../base/core-types.rkt" quad? Font-Weight? Font-Style?)
+ "../base/untyped.rkt"
+ (only-in "../base/quad-types.rkt" word?)
+ (only-in racket/math nonnegative-integer?)
  (only-in racket/list filter-not)
- (only-in racket/draw font% make-font current-ps-setup pdf-dc% the-color-database)
- (only-in racket/class inherit define/override send* class new super-new send define/public object% this)
- (only-in racket/file display-to-file)
-(only-in "world.rkt"
+ (only-in typed/racket/draw Font% make-font current-ps-setup pdf-dc% the-color-database)
+ (only-in typed/racket/class inherit define/override send* class new super-new send define/public object% this)
+ (only-in racket/file display-to-file))
+(require (only-in "world.rkt"
   world:font-size-key
   world:font-size-default
   world:font-color-key
@@ -30,12 +33,11 @@
   world:ascent-key
   world:quality-default
   world:draft-quality
-  world:page-key)
-(only-in "utils.rkt"
-  flatten-quad)
-(only-in "quads.rkt"
+  world:page-key))
+(require (only-in "utils.rkt"
+  flatten-quad))
+(require (only-in "quads.rkt"
   quad-attr-ref
-  word?
   word
   quad-car
   whitespace/nbsp?
@@ -57,7 +59,7 @@
          (define page-quad-hash (make-hash))
          (for ([q (in-list rendering-input)])
            (when (member (quad-name q) renderable-quads)
-             ( hash-update! page-quad-hash (quad-attr-ref q world:page-key) (λ(v) (cons q v)) (λ()  null))))
+             (hash-update! page-quad-hash (assert (quad-attr-ref q world:page-key) nonnegative-integer?) (λ(v) (cons q v)) (λ() (assert null (listof quad?))))))
          (map (λ(k) (render-page (hash-ref page-quad-hash k))) (sort (hash-keys page-quad-hash) <)))))
 
     (define/public (render-element q)
@@ -104,18 +106,18 @@
     (inherit render-element)
 
 
-    (define font-cache ( make-hash '()))
+    (define font-cache (make-hash '()))
     (define (get-cached-font font size style weight)
       (hash-ref! font-cache (list font size style weight) (λ () (make-font #:face font #:size size #:style style #:weight weight))))
 
 
     (define/override (render-word w)
-      (define word-font (quad-attr-ref w world:font-name-key (world:font-name-default)))
-      (define word-size (quad-attr-ref w world:font-size-key (world:font-size-default)))
-      (define word-style (quad-attr-ref w world:font-style-key (world:font-style-default)))
-      (define word-weight (quad-attr-ref w world:font-weight-key (world:font-weight-default)) )
-      (define word-color (quad-attr-ref w world:font-color-key (world:font-color-default)))
-      (define word-background (quad-attr-ref w world:font-background-key (world:font-background-default)))
+      (define word-font (assert (quad-attr-ref w world:font-name-key (world:font-name-default)) string?))
+      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-float?))
+      (define word-style (assert (quad-attr-ref w world:font-style-key (world:font-style-default)) Font-Style?))
+      (define word-weight (assert (quad-attr-ref w world:font-weight-key (world:font-weight-default)) Font-Weight?))
+      (define word-color (assert (quad-attr-ref w world:font-color-key (world:font-color-default)) string?))
+      (define word-background (assert (quad-attr-ref w world:font-background-key (world:font-background-default)) string?))
       (send dc set-font (get-cached-font word-font word-size word-style word-weight))
       (define foreground-color (send the-color-database find-color word-color))
       (when foreground-color
@@ -125,11 +127,11 @@
           (send* dc (set-text-mode 'solid) (set-text-background background-color))
           (send dc set-text-mode 'transparent))
 
-      (define word-text (quad-car w))
-      (send dc draw-text word-text (quad-attr-ref w world:x-position-key)
+      (define word-text (assert (quad-car w) string?))
+      (send dc draw-text word-text (assert (quad-attr-ref w world:x-position-key) float?)
             ;; we want to align by baseline rather than top of box
             ;; thus, subtract ascent from y to put baseline at the y coordinate
-            (-  (quad-attr-ref w world:y-position-key)  (quad-attr-ref w world:ascent-key 0)) #t))
+            (- (assert (quad-attr-ref w world:y-position-key) float?) (assert (quad-attr-ref w world:ascent-key 0) float?)) #t))
 
     (define/override (render-page elements)
       (send dc start-page)

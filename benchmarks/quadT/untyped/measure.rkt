@@ -5,19 +5,19 @@
   update-text-cache-file
   round-float
   measure-text
-  measure-ascent
- )
+  measure-ascent)
 
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
- "../base/core.rkt"
  (only-in racket/class new send)
  (only-in math/flonum fl)
  (only-in racket/file write-to-file file->value)
- (only-in racket/draw record-dc% font% make-font)
-(only-in racket/serialize serialize deserialize))
+ (only-in racket/draw record-dc% make-font)
+)
+(require (only-in racket/serialize
+  serialize
+  deserialize))
 
 ;; =============================================================================
 
@@ -25,10 +25,8 @@
 (define base (expt 10.0 precision))
 (define max-size 1024.0)
 (define dc (new record-dc%))
-;(define-type Measurement-Result-Type (List Float Float Float Float))
-;(define mrt? (make-predicate Measurement-Result-Type))
-(define current-text-cache (make-parameter ( make-hash '())))
-(define current-font-cache (make-parameter ( make-hash '())))
+(define current-text-cache (make-parameter (make-hash '())))
+(define current-font-cache (make-parameter (make-hash '())))
 
 (define (round-float x)
   (/ (round (* base x)) base))
@@ -46,9 +44,10 @@
   (current-text-cache (if (file-exists? cache-file-path)
                           (let ([val (file->value cache-file-path)])
                             (if (eof-object? val)
-                                "ERROR: deserializing"
+                                ;; Error deserializing!
+                                (make-hash '())
                                 (deserialize val)))
-                          ( make-hash  '()))))
+                          (make-hash '()))))
 
 (define (get-cached-font font weight style)
   (hash-ref! (current-font-cache) (list font weight style) (λ() (make-font #:size max-size #:style style #:weight weight #:face font))))
@@ -62,7 +61,7 @@
     ;; avoid `map` here because it requires a cast to ensure the type
     ;; this seems like a bug in TR: doesn't recognize (List Float Float Float Float) as subtype of (Listof Float)?
     (list (fl width) (fl height) (fl descent) (fl extra)))
-  ( hash-ref! (current-text-cache) (list text font weight style) hash-updater))
+  (hash-ref! (current-text-cache) (list text font weight style) hash-updater))
 
 (define-syntax-rule (width x) (car x))
 (define-syntax-rule (height x) (cadr x))
