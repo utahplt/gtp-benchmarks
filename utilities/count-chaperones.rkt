@@ -2,6 +2,8 @@
 
 (require racket/contract)
 (provide
+  chaperones-count/c
+  racket-bin/count-chaperones?
   (contract-out
     [count-chaperones
       (-> racket-bin/count-chaperones? path-string? chaperones-count/c)]))
