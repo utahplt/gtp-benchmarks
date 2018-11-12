@@ -24,10 +24,8 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  (only-in "../base/core-types.rkt"
-    quad? quad-attrs?)
-  #;"../base/quad-types.rkt"
   "../base/untyped.rkt"
+  "../base/untyped-predicates.rkt"
   (only-in racket/list append-map empty? empty split-at-right first splitf-at)
   (only-in racket/string string-append*)
   (only-in math/flonum fl+)

@@ -8,8 +8,6 @@
   require-typed-check
   racket/file
   (only-in racket/include include)
-  "../base/core-types.rkt"
-  "../base/quad-types.rkt"
 )
 (require (only-in "quads.rkt"
   page-break

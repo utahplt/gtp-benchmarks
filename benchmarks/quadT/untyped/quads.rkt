@@ -48,11 +48,8 @@
 (require
   racket/list
  (only-in racket/string string-append*)
- (only-in "../base/core-types.rkt"
-   quad? QuadAttrKey? QuadAttrValue? QuadAttrs?)
- (only-in "../base/quad-types.rkt"
-   optical-kern? spacer? run? line? word? word-break? block-break? column-break? page-break?)
- "../base/untyped.rkt")
+ "../base/untyped.rkt"
+ "../base/untyped-predicates.rkt")
 
 ;; =============================================================================
 

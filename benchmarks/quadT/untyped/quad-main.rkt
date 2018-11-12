@@ -8,13 +8,12 @@
 
 (require
   "../base/untyped.rkt"
+  "../base/untyped-predicates.rkt"
   (only-in racket/list append* empty empty? split-at drop-right)
   (only-in racket/math positive-integer?)
   racket/class
   (only-in racket/sequence sequence->list)
   (only-in math/flonum fl+ fl fl>)
-  (only-in "../base/core-types.rkt" quad?)
-  (only-in "../base/quad-types.rkt" page-break? column-break? block-break? column? line?)
 )
 (require (only-in "quads.rkt"
   quads->doc

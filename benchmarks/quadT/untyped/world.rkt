@@ -73,7 +73,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- #;"../base/core-types.rkt"
  (for-syntax
   racket/base
   racket/syntax))

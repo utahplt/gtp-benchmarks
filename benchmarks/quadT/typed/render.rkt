@@ -152,5 +152,6 @@
     (: render-to-file (Quad Path-String -> Void))
     (define/public (render-to-file doc-quad path)
       (define result-bytes (send this render doc-quad))
+      ;; (with-output-to-file path #:exists 'replace (lambda () (displayln result-bytes))) ;; uncomment to test correctness
       (void))
     ))

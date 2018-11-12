@@ -5,9 +5,8 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- (only-in "../base/core-types.rkt" quad? Font-Weight? Font-Style?)
  "../base/untyped.rkt"
- (only-in "../base/quad-types.rkt" word?)
+ "../base/untyped-predicates.rkt"
  (only-in racket/math nonnegative-integer?)
  (only-in racket/list filter-not)
  (only-in typed/racket/draw Font% make-font current-ps-setup pdf-dc% the-color-database)
@@ -144,5 +143,6 @@
 
     (define/public (render-to-file doc-quad path)
       (define result-bytes (send this render doc-quad))
+      ;; (with-output-to-file path #:exists 'replace (lambda () (displayln result-bytes))) ;; uncomment to test correctness
       (void))
     ))

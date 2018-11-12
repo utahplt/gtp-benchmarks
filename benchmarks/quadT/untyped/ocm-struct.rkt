@@ -14,7 +14,6 @@
 
 (require
   "../base/untyped.rkt"
-  (only-in racket/contract ->)
   racket/math)
 
 ;; =============================================================================
@@ -28,11 +27,3 @@
    base
    tentative)
 #:transparent #:mutable)
-
-;; -----------------------------------------------------------------------------
-
-(define index-type? nonnegative-integer?)
-(define entry-type? any?)
-(define value-type? flonum?)
-(define entry->value-type/c
-  (-> entry-type? value-type?))

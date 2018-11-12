@@ -12,9 +12,8 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  (only-in "../base/quad-types.rkt" word? word-break? run? line? optical-kern? spacer?)
-  (only-in "../base/core-types.rkt" Font-Name? Font-Size? Font-Weight? Font-Style? quad? Breakpoint?)
   "../base/untyped.rkt"
+  "../base/untyped-predicates.rkt"
   "ocm-struct.rkt"
   "penalty-struct.rkt"
   (only-in math/flonum fl+ fl= fl fl/ fl- fl> fl* fllog flabs flmax flexpt)
