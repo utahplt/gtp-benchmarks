@@ -386,6 +386,12 @@ For example, if @emph{Proc. depth} is 3 then there is at least one function
 
 @section[#:tag "gtp:reproducibility"]{Reproducibility}
 
+When rebuilding this document, subscribe to the @litchar{gtp-benchmarks} logger
+ for information about the build:
+
+@nested[#:style 'inset @exec|{PLTSTDERR="error info@gtp-benchmarks" raco setup gtp-benchmarks}|]
+
+
 @subsection{Module Dependence Graphs}
 
 @defmodule[gtp-benchmarks/utilities/modulegraph]{
