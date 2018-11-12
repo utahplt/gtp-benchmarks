@@ -30,7 +30,7 @@ To run a benchmark:
   Create a new directory relative to the benchmark's @filepath{base/} folder (if it exists)
 }
 @item{
-  Copy the benchmarks @filepath{both/} folder into the new directory
+  Copy the benchmark's @filepath{both/} folder into the new directory
 }
 @item{
   Copy your favorite mix of @filepath{typed/} and @filepath{untyped/} modules into the new directory
