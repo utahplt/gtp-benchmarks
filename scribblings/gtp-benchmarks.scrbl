@@ -58,7 +58,7 @@ To run a benchmark:
 
 @itemlist[
   @item[
-    @history[#:change "1.0"
+    @history[#:changed "1.0"
              @elem{Renamed @bm{quadBG} to @bm{quadU} and replaced @bm{quadMB} with @bm{quadT}.
                    In the beginning, @bm{quad} came to us as two programs:
                     an original untyped program and a fully-typed version by the original author.
