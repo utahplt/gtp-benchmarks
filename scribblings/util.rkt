@@ -522,7 +522,7 @@
       (lambda ()
         (log-gtp-benchmarks-info "collecting chaperone counts (ETA ??? hours)")
         (for/list ((bm-name (in-list BENCHMARK-NAME*)))
-          (log-gtp-benchmarks-info "collecting annotations for ~a" bm-name)
+          (log-gtp-benchmarks-info "collecting chaperones for ~a" bm-name)
           (define tu-dir (benchmark->typed/untyped-dir bm-name))
           (define cc-bin (get-count-chaperones-bin))
           (define cc*
