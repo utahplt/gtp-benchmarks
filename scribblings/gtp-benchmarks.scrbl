@@ -192,7 +192,8 @@ Note: these graphs do not show @emph{type adaptor modules}.
                   #:origin "https://github.com/mbutterick/quad"
                   #:depends '((csp untyped))]{
   Converts S-expression source code to @tt{PDF} format.
-  TODO
+  This benchmark started from an @bold{untyped} program by the original author.
+  For the benchmark, we @bold{added} types with minimal changes to the code.
 }
 @format-benchmark[#:name 'quadT
                   #:author "Matthew Butterick"
@@ -200,7 +201,10 @@ Note: these graphs do not show @emph{type adaptor modules}.
                   #:origin "https://github.com/mbutterick/quad"
                   #:depends '((csp untyped))]{
   Converts S-expression source code to @tt{PDF} format.
-  TODO
+  This benchmark started from a @bold{typed} program by the original author.
+  For the benchmark, we @bold{removed} types with minimal changes to the code.
+  Any @tt{cast} forms changed to analogous @tt{contract} forms, and any
+  @tt{define-predicate} forms changed to functions or contracts.
 }
 @format-benchmark[#:name 'sieve
                   #:author "Ben Greenman"
