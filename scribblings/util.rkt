@@ -13,6 +13,7 @@
   (only-in gtp-util
     save-pict
     columnize
+    path-string->string
     rnd
     copy-file*
     copy-directory/files*
@@ -97,7 +98,7 @@
   (test-case "benchmark-name*"
     (check-equal? BENCHMARK-NAME*
                   '(acquire dungeon forth fsm fsmoo gregor jpeg kcfa lnm mbta
-                    morsecode quadBG quadMB sieve snake suffixtree
+                    morsecode quadT quadU sieve snake suffixtree
                     synth take5 tetris zombie zordoz))))
 
 (define library tt)
@@ -237,7 +238,13 @@
   (define src (build-path benchmarks-path (symbol->string bm-name)))
   (unless (directory-exists? src)
     (printf "warning: benchmark directory does not exist '~a'~n" (path->string src)))
-  src)
+  (path->directory-path src))
+
+(module+ test
+  (test-case "benchmark->typed/untyped-dir"
+    (define tu (benchmark->typed/untyped-dir 'mbta))
+    (check-pred directory-exists? tu)
+    (check-pred directory-path? tu)))
 
 (define (get-untyped-loc src)
   (directory-sloc (build-path src untyped-name)))
@@ -408,10 +415,13 @@
     (substring str-m (+ (string-length str-base) (if (directory-string? str-base) 1 0)))
     str-m))
 
+(define (directory-path? ps)
+  (directory-string? (path-string->string ps)))
+
 (define (directory-string? str)
   (define L (string-length str))
   (and (< 0 L)
-       (eq? #\\ (string-ref str (- L 1)))))
+       (eq? #\/ (string-ref str (- L 1)))))
 
 (define (get-modulegraph src)
   (void
@@ -575,8 +585,10 @@
     (check-equal? (maybe-rnd 0.123) "0.12"))
 
   (test-case "benchmark->typed/untyped-dir"
-    (check-equal? (benchmark->typed/untyped-dir 'sieve) (build-path benchmarks-path "sieve"))
-    (check-equal? (benchmark->typed/untyped-dir 'gregor) (build-path benchmarks-path "gregor")))
+    (check-equal? (benchmark->typed/untyped-dir 'sieve)
+                  (path->directory-path (build-path benchmarks-path "sieve")))
+    (check-equal? (benchmark->typed/untyped-dir 'gregor)
+                  (path->directory-path (build-path benchmarks-path "gregor"))))
 
   (test-case "get-untyped-loc"
     (check-equal? (get-untyped-loc (benchmark->typed/untyped-dir 'dungeon)) 541))
@@ -612,12 +624,12 @@
     (check-equal? (modulegraph->num-modules g) 4)
     (check-equal? (modulegraph->num-internal-boundaries g) 3)
     (check-equal? (modulegraph->num-externals g) 1)
-    (check-equal? (modulegraph->numbered-names g)
-                  #hash(("main.rkt" . 0)
-                        ("run-t.rkt" . 1)
-                        ("t-graph.rkt" . 2)
-                        ("t-view.rkt" . 3)
-                        ("../base/my-graph.rkt" . 4)))
+    (check-equal? (sort (hash->list (modulegraph->numbered-names g)) < #:key cdr)
+                  '(("main.rkt" . 0)
+                    ("run-t.rkt" . 1)
+                    ("t-graph.rkt" . 2)
+                    ("t-view.rkt" . 3)
+                    ("../base/my-graph.rkt" . 4)))
     (define nt (modulegraph->name-table g))
     (check-equal? nt
                   '((("main.rkt" . 0) ("t-view.rkt" . 3))
