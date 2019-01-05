@@ -43,7 +43,7 @@ The correct way:
 
 The semi-automatic way:
 
-- Run `racket make-lattice.rkt <PATH-TO-BENCHMARK>`, this creates a directory
+- Run `racket utilities/make-configurations.rkt <PATH-TO-BENCHMARK>`, this creates a directory
   with all typed/untyped configurations of the benchmark.
 - Go to one of the new directories, run `main.rkt`
 
