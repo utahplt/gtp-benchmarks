@@ -8,6 +8,7 @@
     require-typed-check
     racket/base
     racket/contract
+    gtp-benchmarks/utilities/count-chaperones
     (only-in racket/math natural?)
     (only-in require-typed-check/logging require-typed-check-logger)
     (only-in typed/racket/base require/typed))]
