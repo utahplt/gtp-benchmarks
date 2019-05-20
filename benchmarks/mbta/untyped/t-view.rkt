@@ -19,8 +19,8 @@
 ;; [X -> Real] [Listof X] -> X
 ;; argmax also okay 
 ;; select an [Listof X] that satisfies certain length criteria 
-(define selector
-  (curry argmin (lambda (p) (length (filter string? p))))) 
+(define (selector l)
+  ((curry argmin (lambda (p) (length (filter string? p)))) l)) 
 
 ;; ---------------------------------------------------------------------------------------------------
 
