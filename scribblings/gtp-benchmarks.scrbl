@@ -9,6 +9,8 @@
     racket/base
     racket/contract
     gtp-benchmarks/utilities/count-chaperones
+    (only-in racket/function curry)
+    (only-in racket/list argmax)
     (only-in racket/math natural?)
     (only-in require-typed-check/logging require-typed-check-logger)
     (only-in typed/racket/base require/typed))]
@@ -58,6 +60,11 @@ To run a benchmark:
 @section[#:tag "gtp:history"]{Version Notes}
 
 @itemlist[
+  @item[
+    @history[#:changed "2.0"
+             @elem{Fixed a difference between the typed and untyped @bm{mbta} code.
+                   Before, untyped created a function @racket[(curry argmax f)].
+                   After, both create a function @racket[(lambda (l) ((curry argmax f) l))].}]]
   @item[
     @history[#:changed "1.0"
              @elem{Renamed @bm{quadBG} to @bm{quadU} and replaced @bm{quadMB} with @bm{quadT}.
