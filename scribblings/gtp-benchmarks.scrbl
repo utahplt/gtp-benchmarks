@@ -4,6 +4,7 @@
   gtp-benchmarks/scribblings/util
   scriblib/figure
   scribble/example
+  (only-in setup/getinfo get-info)
   (for-label
     require-typed-check
     racket/base
@@ -15,14 +16,26 @@
     (only-in require-typed-check/logging require-typed-check-logger)
     (only-in typed/racket/base require/typed))]
 
+@(define (package-version)
+   (define v-str ((get-info '("gtp-benchmarks")) 'version))
+   (unless (string? v-str)
+     (raise-argument-error 'gtp-benchmarks "valid-version?" v-str))
+   v-str)
+
+@; -----------------------------------------------------------------------------
+
 @title{GTP Benchmarks}
 
 GTP = gradual typing performance
+
+Latest Version: @hyperlink["https://github.com/bennn/gtp-benchmarks/releases"]{@package-version[]}
 
 Source: @url{https://github.com/bennn/gtp-benchmarks}
 
 This package contains benchmarks for measuring the cost of typed/untyped
  interaction in Typed Racket.
+
+@bold{Always include a version number when reporting data on these benchmarks.}
 
 @section[#:tag "gtp:api"]{Running a benchmark}
 
