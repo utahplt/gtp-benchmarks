@@ -19,8 +19,7 @@
  ;; (: zo->spec (-> zo Spec))
  ;; Return a list-of-strings representation of a zo struct.
  ;; The structure of the list mirrors the structure of the original zo struct.
- zo->spec
- Spec)
+ zo->spec)
 
 ;; --- string specifications
 
@@ -28,7 +27,7 @@
          (only-in racket/list   empty?)
          (only-in racket/string string-join)
          (for-syntax racket/base racket/syntax)
-         "../base/typed-zo-structs.rkt")
+         "../base/compiler-zo-structs.rkt")
 
 ;; -----------------------------------------------------------------------------
 
