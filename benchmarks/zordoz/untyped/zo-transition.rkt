@@ -14,7 +14,7 @@
 
 (require racket/match
          (only-in racket/list empty? empty)
-         "../base/typed-zo-structs.rkt")
+         "../base/compiler-zo-structs.rkt")
 
 ;; -----------------------------------------------------------------------------
 
