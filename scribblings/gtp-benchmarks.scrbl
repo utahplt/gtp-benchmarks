@@ -74,6 +74,20 @@ To run a benchmark:
 
 @itemlist[
   @item[
+    @history[#:changed "3.0"
+             @elem{Fixed an issue in the untyped @bm{zordoz} code.
+                   Before, the untyped code imported the typed version of the @tt{compiler/zo-structs} library.
+                   After, the untyped code avoids this unnecessary type boundary.
+                   This issue seriously affects the conclusion about @bm{zordoz}
+                    reached in @cite{JFP-2019}.
+                   That paper compares one version of @bm{zordoz} that does not
+                    suffer the issue (6.2) against two that do (6.3 and 6.4),
+                    and incorrectly concludes that changes to Typed Racket
+                    improved the overhead in the later versions.
+                   In fact, the overhead is better because the untyped code
+                    got unnecessarily slower.
+                   More at: @url{https://github.com/bennn/gtp-benchmarks/issues/16}.  }]]
+  @item[
     @history[#:changed "2.0"
              @elem{Fixed a difference between the typed and untyped @bm{mbta} code.
                    Before, untyped created a function @racket[(curry argmax f)].
