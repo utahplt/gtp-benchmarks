@@ -655,7 +655,7 @@
       (check-equal? (hash-ref si "# Exp.") 9))
     (let ((zi (get-gradual-typing-static-info 'zombie)))
       (check-equal? (hash-ref zi "Untyped LOC") 300)
-      (check-equal? (hash-ref zi "Annotation LOC") 25)
+      (check-equal? (hash-ref zi "Annotation LOC") 34)
       (check-equal? (hash-ref zi "# Modules") 4)
       (check-equal? (hash-ref zi "# Bnd.") 3)
       (check-equal? (hash-ref zi "# Exp.") 15)))
