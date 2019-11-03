@@ -74,6 +74,14 @@ To run a benchmark:
 
 @itemlist[
   @item[
+    @history[#:changed "4.0"
+             @elem{Replace a high-cost cast in @bm{zombie} with a predicate,
+                   and use the same predicate in untyped code. This change
+                   makes the benchmark a better test for "the cost of mixing
+                   typed and untyped code" by removing an un-equal computation
+                   between the untyped and typed versions. (It would be good
+                   to reduce the run-time cost of casts, but that's not the
+                   main concern of this benchmark suite.)}]
     @history[#:changed "3.0"
              @elem{Fixed an issue in the untyped @bm{zordoz} code.
                    Before, the untyped code imported the typed version of the @tt{compiler/zo-structs} library.
