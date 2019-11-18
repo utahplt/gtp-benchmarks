@@ -108,7 +108,7 @@
   (define cache (and lim (cache-init sm lim #:L L)))
   (lambda (N)
     (define good? (make-variation->good? sm (* N baseline) #:L L))
-    (if (and cache (<= N lim))
+    (if (and cache lim (<= N lim))
         ;; Use cache to save some work, only test the variations
         ;; in the next bucket
         (cache-lookup cache N good?)
