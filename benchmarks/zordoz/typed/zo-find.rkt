@@ -61,7 +61,6 @@
 (: zo-find-aux (-> zo (Listof zo) String Natural (U Natural #f) (Listof result)))
 (define (zo-find-aux z hist str i lim)
   (define-values (title children) (parse-zo z))
-  (define zstr (format "~a" z))
   (: results (Listof result))
   (define results
     (cond
