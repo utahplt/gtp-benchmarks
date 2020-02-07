@@ -458,6 +458,18 @@ When rebuilding this document, subscribe to the @litchar{gtp-benchmarks} logger
   Predicate for an adjacency list.
 }
 
+@defproc[(complete-path->imported-modules [p path-string?]) (listof complete-path?)]{
+  Uses @racket[module->imports] to build a list of one file's imports.
+
+  @history[#:added "5.1"]
+}
+
+@defproc[(complete-path->exported-identifiers [p path-string?]) (listof symbol?)]{
+  Uses @racket[module->exports] to collect the names of one file's exports.
+
+  @history[#:added "5.1"]
+}
+
 
 @subsection{Type Information}
 

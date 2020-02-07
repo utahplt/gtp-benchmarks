@@ -5,10 +5,11 @@
 
 (require racket/contract)
 (provide
-  complete-path->imported-modules
-  complete-path->exported-identifiers
-
   (contract-out
+    (complete-path->imported-modules
+      (-> path-string? (listof complete-path?)))
+    (complete-path->exported-identifiers
+      (-> path-string? (listof symbol?)))
     (make-modulegraph
       (-> (listof path-string?) modulegraph?))
     (modulegraph->num-modules
@@ -119,7 +120,8 @@
              (v (in-naturals)))
     (values k v)))
 
-(define (complete-path->imported-modules path)
+(define (complete-path->imported-modules pre-path)
+  (define path (path->complete-path pre-path))
   (define parent-dir (path-only path))
   (define all-imports
     (with-visit-namespace path module->imports))
@@ -141,7 +143,7 @@
 
 (define (complete-path->exported-identifiers path)
   (define-values [p* s*]
-    (with-visit-namespace path module->exports))
+    (with-visit-namespace (path->complete-path path) module->exports))
   (append (parse-provided p*) (parse-provided s*)))
 
 (define (with-visit-namespace path f)
