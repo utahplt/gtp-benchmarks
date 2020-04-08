@@ -25,7 +25,7 @@ Each benchmark is made of 2-4 folders:
 To Run
 ---
 
-The quick way:
+#### Quick route
 
 - Go to the benchmark's directory
 - Create a new directory
@@ -34,14 +34,25 @@ The quick way:
 - Run `main.rkt`
 
 
-The correct way:
+#### Official route
 
 - Install the `gtp-measure` package (`raco pkg install gtp-measure`)
 - Run `raco gtp-measure <PATH-TO-BENCHMARK>` (or run `raco gtp-measure --help`)
 - Follow its instructions to get the output
 
+To run all benchmarks,
+ copy and modify the sample manifest [here](./utilities/sample-gtp-measure-manifest.rkt)
+ and run via:
 
-The semi-automatic way:
+```
+  PLTSTDERR="error info@gtp-measure" raco gtp-measure --output sample-data/ sample-gtp-measure-manifest.rkt
+```
+
+Results appear in a new directory `./sample-data/1/` and if you re-run the command
+ new directories appear under `./sample-data/`.
+
+
+#### Semi-automatic route
 
 - Run `racket utilities/make-configurations.rkt <PATH-TO-BENCHMARK>`, this creates a directory
   with all typed/untyped configurations of the benchmark.
@@ -67,7 +78,7 @@ For `forth` in particular, the untyped configuration runs extremely quickly
 Dependencies
 ---
 
-- `require-typed-check`
+- [`require-typed-check`](https://docs.racket-lang.org/require-typed-check/index.html)
 
 
 

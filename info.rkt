@@ -6,6 +6,6 @@
 (define version "5.2")
 (define pkg-authors '(ben))
 (define scribblings '(("scribblings/gtp-benchmarks.scrbl" () ("Benchmarks"))))
-(define compile-omit-paths '("benchmarks"))
-(define test-omit-paths '("benchmarks"))
+(define compile-omit-paths '("benchmarks" "utilities/sample-gtp-measure-manifest.rkt"))
+(define test-omit-paths '("benchmarks" "utilities/sample-gtp-measure-manifest.rkt"))
 
