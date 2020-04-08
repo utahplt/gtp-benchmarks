@@ -25,6 +25,7 @@
 @; -----------------------------------------------------------------------------
 
 @title{GTP Benchmarks}
+@section-index{gtp-benchmarks}
 
 GTP = gradual typing performance
 
