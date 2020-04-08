@@ -40,7 +40,9 @@ This package contains benchmarks for measuring the cost of typed/untyped
 
 @section[#:tag "gtp:api"]{Running a benchmark}
 
-To run a benchmark:
+Three options:
+
+@subsection[#:tag "gtp:quick-run"]{Quick Route}
 
 @itemlist[
 @item{
@@ -57,6 +59,38 @@ To run a benchmark:
 }
 ]
 
+
+@subsection[#:tag "gtp:measure-run"]{Official Route}
+
+@itemlist[
+@item{
+  Install the @hyperlink["https://docs.racket-lang.org/gtp-measure/index.html"]{@tt{gtp-measure}} package
+}
+@item{
+  Make a copy of the
+  @hyperlink["https://github.com/bennn/gtp-benchmarks/tree/master/utilities/sample-gtp-measure-manifest.rkt"]{sample benchmarking script}
+  in this repo and modify it to match your machine / goals.
+}
+@item{
+  Run via:
+    @nested[#:style 'inset @exec|{PLTSTDERR="error info@gtp-measure" raco gtp-measure --output sample-data/ sample-gtp-measure-manifest.rkt}|]
+}
+]
+
+
+@subsection[#:tag "gtp:script-run"]{Semi-Auto Route}
+
+@itemlist[
+@item{
+  On the command-line:
+    @nested[#:style 'inset @exec{racket utilities/make-configurations.rkt benchmarks/NAME}]
+  This creates a directory with all typed/untyped configurations.
+}
+@item{
+  Move to a configuration sub-directory and run the @filepath{main.rkt} module.
+}
+]
+
 @defmodule[gtp-benchmarks/utilities/make-configurations]{
   Script for generating all typed/untyped configurations of a benchmark.
 }
@@ -65,9 +99,6 @@ To run a benchmark:
   Given a path to a benchmark (under the @filepath{benchmarks/} directory),
    generates all typed/untyped configurations of the benchmark and stores
    them in a new folder in the current directory.
-
-  On the command-line:
-  @nested[#:style 'inset @exec{racket utilities/make-configurations.rkt benchmarks/NAME}]
 }
 
 
