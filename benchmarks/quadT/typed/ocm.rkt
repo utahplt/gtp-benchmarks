@@ -121,7 +121,7 @@
   (for ([([col : Index-Type] col-idx) (in-indexed col-indices)] #:when (even? col-idx))
     (define idx-of-last-row (cast (if (= col-idx idx-of-last-col)
                                       (vector-last row-indices)
-                                      (hash-ref (cast (hash-ref minima (vector-ref col-indices (add1 col-idx))) HashTableTop) minima-idx-key)) Index-Type))
+                                      (hash-ref (cast (hash-ref minima (vector-ref col-indices (add1 col-idx))) (HashTable Any Any)) minima-idx-key)) Index-Type))
     (! minima col (make-minimum (smallest-value-entry col idx-of-last-row))))
   minima)
 
@@ -129,7 +129,7 @@
 ;; The return value `minima` is a hash:
 ;; the keys are col-indices (integers)
 ;; the values are pairs of (value row-index).
-(: concave-minima ((Vectorof Index-Type) (Vectorof Index-Type) Matrix-Proc-Type Entry->Value-Type -> HashTableTop))
+(: concave-minima ((Vectorof Index-Type) (Vectorof Index-Type) Matrix-Proc-Type Entry->Value-Type -> (HashTable Any Any)))
 (define (concave-minima row-indices col-indices matrix-proc entry->value)
   ;((vector?) ((or/c #f vector?) procedure? procedure?) . ->* . hash?)
   (define reduce-proc reduce2)
@@ -194,9 +194,9 @@
          [(>= col (vector-length ($ocm-min-entrys ocm)))
           (set-$ocm-min-entrys! ocm (vector-append-entry ($ocm-min-entrys ocm) (@ (cast (@ minima col) (HashTable Symbol Entry-Type)) minima-payload-key)))
           (set-$ocm-min-row-indices! ocm (vector-append-index ($ocm-min-row-indices ocm) (@ (cast (@ minima col) (HashTable Symbol Index-Type)) minima-idx-key)))]
-         [(< (($ocm-entry->value ocm) (@ (cast (@ minima col) HashTableTop) minima-payload-key)) (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
-          (set-$ocm-min-entrys! ocm ((inst vector-set Entry-Type) ($ocm-min-entrys ocm) col (cast (@ (cast (@ minima col) HashTableTop) minima-payload-key) Entry-Type)))
-          (set-$ocm-min-row-indices! ocm ((inst vector-set (U Index-Type No-Value-Type)) ($ocm-min-row-indices ocm) col (cast (@ (cast (@ minima col) HashTableTop) minima-idx-key) Index-Type)))]))
+         [(< (($ocm-entry->value ocm) (@ (cast (@ minima col) (HashTable Any Any)) minima-payload-key)) (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
+          (set-$ocm-min-entrys! ocm ((inst vector-set Entry-Type) ($ocm-min-entrys ocm) col (cast (@ (cast (@ minima col) (HashTable Any Any)) minima-payload-key) Entry-Type)))
+          (set-$ocm-min-row-indices! ocm ((inst vector-set (U Index-Type No-Value-Type)) ($ocm-min-row-indices ocm) col (cast (@ (cast (@ minima col) (HashTable Any Any)) minima-idx-key) Index-Type)))]))
 
      (set-$ocm-finished! ocm next)]
 
