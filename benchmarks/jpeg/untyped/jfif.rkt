@@ -623,7 +623,7 @@
             (scan-components  (compute-scan-components frame q-tables)))
        (values
         q-tables
-        (for/array #:shape (array-shape mcu-array)
+        (for/array #:shape (vector-map values (array-shape mcu-array))
                    ((mcu  (in-array (ann mcu-array (Array MCU)))))
           (vector-map
            (lambda (blocks scan-component)
