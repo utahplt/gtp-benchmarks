@@ -104,7 +104,22 @@ Three options:
 
 @section[#:tag "gtp:history"]{Version Notes}
 
+See also the GitHub release notes:
+@url{https://github.com/bennn/gtp-benchmarks/releases}
+
 @itemlist[
+  @item[
+    @history[#:changed "5.0"
+             @elem{(1) Remove an unused call to @racket[format] in the typed
+                   version of @bm{zordoz}. This change @bold{significantly}
+                   improves the runtime of typed code; for example, the
+                   typed/untyped ratio improves by an order of magnitude.
+                   @linebreak[]
+
+                   (2) Fix an unbound identifier error in the typed version of
+                   @bm{lnm}. This error went undiscovered because the @tt{plot}
+                   library caught and ignored it, but does not change overall
+                   performance.}]]
   @item[
     @history[#:changed "4.0"
              @elem{Replace a high-cost cast in @bm{zombie} with a predicate,
@@ -113,7 +128,8 @@ Three options:
                    typed and untyped code" by removing an un-equal computation
                    between the untyped and typed versions. (It would be good
                    to reduce the run-time cost of casts, but that's not the
-                   main concern of this benchmark suite.)}]
+                   main concern of this benchmark suite.)}]]
+  @item[
     @history[#:changed "3.0"
              @elem{Fixed an issue in the untyped @bm{zordoz} code.
                    Before, the untyped code imported the typed version of the @tt{compiler/zo-structs} library.
