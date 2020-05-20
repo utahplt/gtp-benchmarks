@@ -5,6 +5,7 @@
 (require
   require-typed-check
   racket/match
+  "../base/untyped.rkt"
   "gregor-structs.rkt"
   (only-in racket/math exact-round)
 )
@@ -104,8 +105,9 @@
           [(tzoffset? res)
            (make-moment dt (tzoffset-utc-seconds res) zone)]
           [else (resolve res dt zone #f)])]
-        [else
-         (make-moment dt zone #f)]))
+        [(index? zone)
+         (make-moment dt zone #f)]
+        [else (error (format "datetime+tz->moment unknown zone ~a" zone))]))
 
 (define moment->datetime/local Moment-datetime/local)
 (define moment->utc-offset     Moment-utc-offset)

@@ -46,11 +46,9 @@
 (define (time-write-proc t out mode)
   (fprintf out "#<time ~a>" (time->iso8601 t)))
 
-(: time? (-> Any Boolean))
-(define time? Time?)
-
 (: time->hmsn (-> Time HMSN))
 (define time->hmsn Time-hmsn)
+
 (: time->ns (-> Time Natural))
 (define (time->ns t)
   (Time-ns t))

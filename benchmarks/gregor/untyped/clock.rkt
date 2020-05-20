@@ -26,6 +26,7 @@
 
 (require
   require-typed-check
+  "../base/untyped.rkt"
   "gregor-structs.rkt"
 )
 (require (only-in "moment.rkt"
@@ -84,6 +85,7 @@
 ;(: current-posix-seconds (-> Natural))
 (define (current-posix-seconds)
   (let ([r (/ (inexact->exact (current-inexact-milliseconds)) 1000)])
+    (unless (index? r) (error "current-posix-seconds"))
     r))
 
 ;(: current-clock (Parameterof (-> Exact-Rational)))

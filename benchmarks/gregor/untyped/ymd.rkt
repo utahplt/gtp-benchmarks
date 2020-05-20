@@ -24,6 +24,7 @@
 (require
   racket/match
   "core-structs.rkt"
+  "../base/untyped.rkt"
   (only-in racket/math exact-truncate exact-floor))
 
 ;; =============================================================================
@@ -82,6 +83,10 @@
     (let-values ([(m y) (if (<= e 13)
                             (values (sub1 e) (- c 4716))
                             (values (- e 13) (- c 4715)))])
+      (unless (and (index? y)
+                   (and (index? m) (< 0 m) (< m 13))
+                   (index? dom))
+        (error "jdn->ymd"))
       (case m
         [(1) (YMD y 1 dom)]
         [(2) (YMD y 2 dom)]
@@ -150,7 +155,8 @@
 (define (ymd-add-months ymd n)
   (match-define (YMD y m d) ymd)
   ;(: ny Natural)
-  (define ny (+ y (div (+ m n -1) 12)))
+  (define ny
+    (let ([r (+ y (div (+ m n -1) 12))]) (unless (index? r) (error "ymd-add-months")) r))
   ;(: nm Month)
   (define nm
     (case (let ([v (mod1 (+ m n) 12)])
@@ -172,6 +178,8 @@
       [else (error "ymd-add-months")]))
   (define max-dom (days-in-month ny nm))
   (define nd (if (<= d max-dom) d max-dom))
+  (unless (index? nd)
+    (error "ymd-add-months"))
   (case nm
     [(1) (YMD ny 1 nd)]
     [(2) (YMD ny 2 nd)]
