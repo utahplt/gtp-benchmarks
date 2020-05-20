@@ -5,6 +5,7 @@
 ;; -----------------------------------------------------------------------------
 
 (require
+  "../base/untyped.rkt"
   racket/match
   racket/class
   (only-in racket/port with-input-from-string)
@@ -16,10 +17,6 @@
 (require (only-in "stack.rkt"
   stack-init
 ))
-
-(define (assert v p)
-  (unless (p v) (error 'assert))
-  v)
 
 ;; =============================================================================
 

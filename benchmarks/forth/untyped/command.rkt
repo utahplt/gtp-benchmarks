@@ -8,6 +8,7 @@
 ;; -----------------------------------------------------------------------------
 
 (require
+ "../base/untyped.rkt"
  racket/match
  racket/class
  (only-in racket/string string-join)
@@ -22,10 +23,6 @@
   stack-push
   stack-swap
 ))
-
-(define (assert v p)
-  (unless (p v) (error 'assert))
-  v)
 
 ;; =============================================================================
 ;; -- Commands
