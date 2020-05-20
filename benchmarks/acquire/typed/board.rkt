@@ -487,7 +487,16 @@
       (sort x* (lambda ([x : (List Hotel Natural)] [y : (List Hotel Natural)]) (> (cadr x) (cadr y))))))
   (define partitioned ((inst aux:partition (List Hotel Natural) Hotel)
     sorted second (lambda ([x : (List Hotel Natural)]) (car x))))
-  (values (cast (first partitioned) (Pairof Hotel (Listof Hotel))) (apply append (rest partitioned))))
+  (values (assert (first partitioned) pairof-hotel-listof-hotel)
+          (apply append (rest partitioned))))
+
+(: pairof-hotel-listof-hotel (-> Any Boolean : #:+ (Pairof Hotel (Listof Hotel))))
+(define (pairof-hotel-listof-hotel x)
+  (and (pair? x)
+       (string? (car x))
+       (list? (cdr x))
+       (andmap string? (cdr x))
+       #t))
 
 (: deduplicate/hotel (-> (Listof Hotel) (Listof Hotel)))
 (define (deduplicate/hotel h*)

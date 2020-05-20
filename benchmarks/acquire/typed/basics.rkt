@@ -173,10 +173,17 @@
 (: SHARES-PER-TURN# Share)
 (define SHARES-PER-TURN# 2)
 
+(: listof-hotel? (-> Any Boolean : #:+ (Listof Hotel)))
+(define (listof-hotel? x)
+  (and (list? x)
+       (andmap string? x)
+       (andmap hotel? x)
+       #t))
+
 ;;bg; changed from shares-order/c
 (: shares-order? (-> Any Boolean))
 (define (shares-order? x*)
-  (define h* (cast x* (Listof Hotel)))
+  (define h* (assert x* listof-hotel?))
   (and
    (not (null? h*))
    (let ([h1 : Hotel (car h*)])
@@ -316,7 +323,8 @@
 (: CASH0 Cash)
 (define CASH0 8000)
 
-(define-predicate cash? Cash)
+(: cash? (-> Any Boolean : Cash))
+(define cash? exact-nonnegative-integer?)
 
 (: string->cash (-> String (Option Cash)))
 (define (string->cash s)

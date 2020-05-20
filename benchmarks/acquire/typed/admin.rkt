@@ -129,8 +129,6 @@
             (lambda ([arg : (List (Option Tile) (Option Hotel) (Listof Hotel))])
               (define-values (tile hotel-involved buy-shares)
                 (values (car arg) (cadr arg) (caddr arg)))
-                ;; (let ([arg+ (cast arg* (List Tile Hotel (-> (Instance ATree%) State Any)))])
-                ;;   (values (car arg+) (cadr arg+) (caddr arg+))))
               (cond
                 [(boolean? tile) 
                  (finish state)

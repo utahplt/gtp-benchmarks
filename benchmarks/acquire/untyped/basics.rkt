@@ -152,7 +152,9 @@
 
 (define (listof-hotel? x)
   (and (list? x)
-       (andmap hotel? x)))
+       (andmap string? x)
+       (andmap hotel? x)
+       #t))
 
 ;;bg; changed from shares-order/c
 (define (shares-order? x*)
@@ -275,7 +277,6 @@
 
 (define CASH0 8000)
 
-;(define-predicate cash? Cash)
 (define cash? exact-nonnegative-integer?)
 
 (define (string->cash s)

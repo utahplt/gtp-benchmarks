@@ -111,21 +111,12 @@
 (require (only-in "auxiliaries.rkt"
   aux:partition
   distinct
+  randomly-pick
 ))
 
 ;; =============================================================================
+;; the TILE submodule
 
-(module tiles racket
-  (provide (all-defined-out))
-  (require
-   "../base/untyped.rkt")
-  (require (only-in "basics.rkt"
-    hotel->color
-    hotel->label))
-  (require (only-in "auxiliaries.rkt"
-    randomly-pick))
-
-  ;; ---------------------------------------------------------------------------------------------------
   ;; ROWS and COLUMNS
 
 
@@ -269,10 +260,6 @@
 
   (define (tile->string t)
     (format "(~a,~a)" (tile-column t) (tile-row t)))
-
-  )
-
-(require 'tiles)
 
 ;; ---------------------------------------------------------------------------------------------------
 ;; data
@@ -431,13 +418,15 @@
                 (list h (size-of-hotel board h)))])
       (sort x* (lambda (x y) (> (cadr x) (cadr y))))))
   (define partitioned (aux:partition sorted second (lambda (x) (car x))))
-  (values (assert (first partitioned) pairof-hotel-listof-hotel) (apply append (rest partitioned))))
+  (values (assert (first partitioned) pairof-hotel-listof-hotel)
+          (apply append (rest partitioned))))
 
 (define (pairof-hotel-listof-hotel x)
   (and (pair? x)
-       (hotel? (car x))
+       (string? (car x))
        (list? (cdr x))
-       (andmap hotel? (cdr x))))
+       (andmap string? (cdr x))
+       #t))
 
 (define (deduplicate/hotel h*)
   (let loop ([h* h*])
