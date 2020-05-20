@@ -41,10 +41,10 @@
   (class object%
     (init-field a* (b* a*))
     (super-new)
-    
+
     (define/public (payoffs)
-      (for/list ([a a*]) (send a pay)))
-    
+      (for/list ([a (in-vector a*)]) (send a pay)))
+
     (define/public (match-up* rounds-per-match)
       ;; comment out this line if you want cummulative payoff histories:
       ;; see below in birth-death
@@ -57,24 +57,24 @@
         (vector-set! a* i a1)
         (vector-set! a* (+ i 1) a2))
       (void))
-    
+
     (define/public (death-birth rate #:random (q #false))
-      (define payoffs (for/list ([x (in-vector a*)]) (send x pay)))
-      [define substitutes (choose-randomly payoffs rate #:random q)]
+      (define payoffs* (payoffs))
+      [define substitutes (choose-randomly payoffs* rate #:random q)]
       (for ([i (in-range rate)][p (in-list substitutes)])
         (vector-set! a* i (send (vector-ref b* p) clone)))
       (shuffle-vector))
-    
+
     ;; -> Void
     ;; effec: reset all automata in a*
     (define/private (reset)
-      (for ([x a*][i (in-naturals)]) (vector-set! a* i (send x reset))))
-    
+      (for ([x (in-vector a*)][i (in-naturals)]) (vector-set! a* i (send x reset))))
+
     ;; -> Population
     ;; effect: shuffle vector b into vector a
     ;; constraint: (= (vector-length a) (vector-length b))
     ;; Fisher-Yates Shuffle
-    
+
     (define/private (shuffle-vector)
       ;; copy b into a
       (for ([x (in-vector a*)][i (in-naturals)])

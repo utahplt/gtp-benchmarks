@@ -31,7 +31,10 @@
   (for/list ([n (in-range speed)])
     [define r (or q (random))]
     ;; population is non-empty so there will be some i such that ... 
-    (for/last ([p (in-naturals)] [% (in-list %s)] #:final (< r %)) p)))
+    (let loop ([%s %s])
+      (cond
+        [(< r (first %s)) 0]
+        [else (add1 (loop (rest %s)))]))))
 
 ;; [Listof Probability] -> [Listof Probability]
 ;; calculate the accumulated probabilities 

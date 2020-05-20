@@ -47,11 +47,9 @@
 ;; Payoff     = N
 
 (define (make-random-automaton n)
-  (new automaton%
-       [current (random n)]
-       [payoff 0]
-       [table
-        (build-vector n (lambda _ (build-vector n (lambda _ (random n)))))]))
+  (define (trans _i) (build-vector n (lambda (_) (random n))))
+  (define seed (random n))
+  (new automaton% [current seed] [payoff 0] [table (build-vector n trans)]))
 
 ;; Automaton = (instance automaton% State Payoff Table)
 (define automaton%

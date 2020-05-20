@@ -34,9 +34,7 @@
     (let loop : Natural ([%s : [Listof Real] %s])
       (cond
         [(< r (first %s)) 0]
-        [else (add1 (loop (rest %s)))]))
-    #;
-    (for/last ([p (in-naturals)] [% (in-list %s)] #:final (< r %)) p)))
+        [else (add1 (loop (rest %s)))]))))
 
 (: accumulated-%s (-> [Listof Probability] [Listof Real]))
 ;; [Listof Probability] -> [Listof Probability]

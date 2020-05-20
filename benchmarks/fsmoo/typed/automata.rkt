@@ -27,9 +27,8 @@
 (define-type oAutomaton (Instance Automaton))
 (define-type Payoff Nonnegative-Real)
 
-(provide automaton? defects cooperates tit-for-tat grim-trigger make-random-automaton)
+(provide defects cooperates tit-for-tat grim-trigger make-random-automaton)
 
-(: automaton? (-> Any Boolean))
  (: defects (-> Payoff oAutomaton))
  (: cooperates (-> Payoff oAutomaton))
  (: tit-for-tat (-> Payoff oAutomaton))
@@ -39,9 +38,6 @@
   ;; (make-random-automaton n k) builds an n states x k inputs automaton
   ;; with a random transition table 
   (-> Natural oAutomaton))
-
-(define (automaton? v)
-  (is-a? v automaton%))
 
 ;; =============================================================================
 (define-type Transition* [Vectorof [Vectorof State]])

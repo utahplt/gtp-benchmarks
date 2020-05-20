@@ -4,7 +4,10 @@
 ;; Run a Simulation of Interacting Automata
 
 ;; =============================================================================
-(require "population.rkt" "utilities.rkt")
+(require "../base/untyped.rkt" "population.rkt" "utilities.rkt")
+
+(define (payoff? x)
+  (and (real? x) (<= 0 x)))
 
 ;; -> Void
 ;; effect: run timed simulation, create and display plot of average payoffs
@@ -29,6 +32,8 @@
     [else (send p match-up* r)
           (define pp (send p payoffs))
           (send p death-birth s)
-          (cons (relative-average pp r) (evolve (- c 1) s r))])))
+          (cons
+            (assert (relative-average pp r) payoff?)
+            (evolve (- c 1) s r))])))
 
 (time (main))
