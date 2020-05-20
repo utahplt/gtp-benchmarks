@@ -1,14 +1,6 @@
 #lang racket/base
 
-(provide
-  index?
-  assert
-)
-
-(define (assert v p)
-  (if (p v)
-    v
-    (raise-user-error 'assert)))
+(provide index?)
 
 (require (only-in racket/unsafe/ops unsafe-fx>=))
 

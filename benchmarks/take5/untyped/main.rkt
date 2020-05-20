@@ -18,9 +18,6 @@
   create-dealer
 ))
 
-(define (index? n)
-  (and (exact-nonnegative-integer? n) (< n 9999999)))
-
 ;; =============================================================================
 
 (define (main n)

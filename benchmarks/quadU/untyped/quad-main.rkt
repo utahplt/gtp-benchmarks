@@ -9,6 +9,7 @@
 (require
   require-typed-check
   "../base/quad-types.rkt"
+  "../base/untyped.rkt"
   racket/class
   (only-in racket/list append* split-at drop-right)
   (only-in racket/sequence sequence->list)
@@ -98,19 +99,6 @@
     ;[get-solver (-> Any)])])
 ))
 ;; =============================================================================
-
-(define (assert v p)
-  (unless (p v) (error 'quad-main "asert"))
-  v)
-
-(define (natural? v)
-  (and (integer? v) (<= 0 v)))
-
-(define (index? v)
-  (and (integer? v) (<= 0 v) (< v 9999999)))
-
-(define (positive-integer? v)
-  (and (integer? v) (positive? v)))
 
 (define (listof-quad? qs)
   (and (list? qs) (andmap quad? qs)))

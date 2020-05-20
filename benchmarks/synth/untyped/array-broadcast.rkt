@@ -12,15 +12,12 @@
          (only-in racket/vector vector-append)
          (only-in racket/string string-join)
          (only-in racket/list empty? first rest)
-         "data.rkt")
+         "data.rkt"
+         "../base/untyped.rkt")
 
 (provide array-broadcasting
          array-broadcast
          array-shape-broadcast)
-
-(define (index? n)
-  (and (<= 0 n)
-       (<  n 999999999999)))
 
 (define array-broadcasting (make-parameter #t))
 

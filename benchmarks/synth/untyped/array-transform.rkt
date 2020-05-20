@@ -9,13 +9,10 @@
                   array-default-strict!)
          (only-in "array-broadcast.rkt" array-broadcast array-shape-broadcast)
          (only-in "array-utils.rkt" unsafe-vector-remove vector-copy-all unsafe-vector-insert)
-         "data.rkt")
+         "data.rkt"
+         "../base/untyped.rkt")
 
 (provide array-append*)
-
-(define (index? n)
-  (and (<= 0 n)
-       (<  n 999999999999)))
 
 (define (array-broadcast-for-append arrs k)
   (define dss (map (λ (arr ) (array-shape arr)) arrs))

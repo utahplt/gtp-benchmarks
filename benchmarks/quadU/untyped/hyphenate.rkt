@@ -11,6 +11,7 @@
 
 (require
  require-typed-check
+ "../base/untyped.rkt"
  (only-in racket/string string-replace string-join)
  (only-in racket/list partition drop-right drop make-list filter-not take splitf-at)
 )
@@ -4982,15 +4983,6 @@
              ([init  (car xs)])
              ([next  (in-list (cdr xs))])
             (max-index init next)))
-
-(define (assert v p)
-  (unless (p v) (error 'hyphenate "Assertion"))
-  v)
-
-(define (index? n)
-  (and (integer? n)
-       (<= 0 n)
-       (< n 9999999)))
 
 ;; -----------------------------------------------------------------------------
 

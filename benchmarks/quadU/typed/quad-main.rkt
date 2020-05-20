@@ -99,6 +99,11 @@
     [set-solver (Any . -> . Void)]
     [get-solver (-> Any)])])
 
+;; TODO
+(: listof-quad? (-> Any Boolean : #:+ (Listof Quad)))
+(define (listof-quad? qs)
+  (and (list? qs) (andmap quad? qs)))
+
 ;; =============================================================================
 
 (define-type Block-Type (Listof Quad))
@@ -147,7 +152,7 @@
 (define (merge-adjacent-within q)
   (quad (quad-name q)
         (make-quadattrs (quad-attrs q))
-        (join-quads (cast (quad-list q) (Listof Quad)))))
+        (join-quads (assert (quad-list q) listof-quad?))))
 
 (: hyphenate-quad-except-last-word (Quad . -> . Quad))
 (define (hyphenate-quad-except-last-word q)
@@ -274,7 +279,7 @@
             (>= lines-that-will-remain world:min-first-lines))) ; but if any remain, must be minimum number.
       (send prob add-constraint (λ(x) (first-lines-constraint (cast x Index) lines-remaining)) '("column-lines"))
       (define s (send prob get-solution))
-      (define how-many-lines-to-take (cast (hash-ref s "column-lines") Natural))
+      (define how-many-lines-to-take (assert (hash-ref s "column-lines") natural?))
       (define-values (lines-to-take lines-to-leave) (split-at lines-remaining how-many-lines-to-take))
       (send prob reset)
       (define new-column (quads->column lines-to-take))
