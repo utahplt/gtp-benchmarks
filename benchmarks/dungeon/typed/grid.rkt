@@ -88,21 +88,21 @@
 (: left (->* (Pos) (Index) Pos))
 (define (left pos [n 1])
   (vector (vector-ref pos 0)
-          (assert (- (vector-ref pos 1) n) index?)))
+          (assert (max (- (vector-ref pos 1) n) 0) index?)))
 
 (: right (->* (Pos) (Index) Pos))
 (define (right pos [n 1])
   (vector (vector-ref pos 0)
-          (assert (+ (vector-ref pos 1) n) index?)))
+          (assert (max (+ (vector-ref pos 1) n) 0) index?)))
 
 (: up (->* (Pos) (Index) Pos))
 (define (up pos [n 1])
-  (vector (assert (- (vector-ref pos 0) n) index?)
+  (vector (assert (max (- (vector-ref pos 0) n) 0) index?)
           (vector-ref pos 1)))
 
 (: down (->* (Pos) (Index) Pos))
 (define (down pos [n 1])
-  (vector (assert (+ (vector-ref pos 0) n) index?)
+  (vector (assert (max (+ (vector-ref pos 0) n) 0) index?)
           (vector-ref pos 1)))
 
 

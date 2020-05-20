@@ -22,10 +22,10 @@
 (require (only-in "message-queue.rkt"
   enqueue-message!
 ))
-(require (only-in racket/dict
-  dict-ref
-  dict-set!
-))
+(define (dict-ref tbl c)
+  (or (hash-ref tbl c #f) (raise-user-error 'dict-ref)))
+(define (dict-set! cc k v)
+  (hash-set! cc k v))
 ;; =============================================================================
 
 ;; maps printed representations to cell classes

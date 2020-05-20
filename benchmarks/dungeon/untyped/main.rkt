@@ -11,9 +11,13 @@
 (require (only-in racket/set
   set-intersect
 ))
-(require (only-in racket/dict
-  dict-set
-))
+(define (dict-set pc p c)
+  (define ok (box #f))
+  (for/list
+            ([x (in-list pc)])
+    (if (and (not (unbox ok)) (equal? (car x) p))
+      (begin (set-box! ok #t) (cons p c))
+      x)))
 (require (only-in "cell.rkt"
   void-cell%
   wall%

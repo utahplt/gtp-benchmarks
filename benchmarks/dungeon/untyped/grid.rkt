@@ -75,18 +75,18 @@
 
 (define (left pos [n 1])
   (vector (vector-ref pos 0)
-          (max (- (vector-ref pos 1) n) 0)))
+          (assert (max (- (vector-ref pos 1) n) 0) index?)))
 
 (define (right pos [n 1])
   (vector (vector-ref pos 0)
-          (max (+ (vector-ref pos 1) n) 0)))
+          (assert (max (+ (vector-ref pos 1) n) 0) index?)))
 
 (define (up pos [n 1])
-  (vector (max (- (vector-ref pos 0) n) 0)
+  (vector (assert (max (- (vector-ref pos 0) n) 0) index?)
           (vector-ref pos 1)))
 
 (define (down pos [n 1])
-  (vector (max (+ (vector-ref pos 0) n) 0)
+  (vector (assert (max (+ (vector-ref pos 0) n) 0) index?)
           (vector-ref pos 1)))
 
 

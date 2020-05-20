@@ -11,9 +11,6 @@
 (require/typed racket/set
   (set-intersect (All (A) (-> (Listof A) (Listof A) (Listof A))))
 )
-;(require/typed racket/dict
-;  (dict-set (-> Poss->Cells Pos Cell% Poss->Cells))
-;)
 (: dict-set (-> Poss->Cells Pos Cell% Poss->Cells))
 (define (dict-set pc p c)
   (define ok : (Boxof Boolean) (box #f))
