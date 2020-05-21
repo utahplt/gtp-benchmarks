@@ -24,12 +24,23 @@
 (define COLORS '("blue" "orange" "green" "red"))
 
 ;; ---------------------------------------------------------------------------------------------------
-(: line-specification (-> String (U False Line*)))
-(define (line-specification line)
+(: line-specification? (-> String (U False Line*)))
+(define (line-specification? line)
   (define r (regexp-match #px"--* (.*)" line))
-  (and r #;"for type checker:" (cadr r) 
+  (and r
        ;; the outer cast is for conversting strings to lines
-       (cast (string-split (cast (cadr r) String)) Line*)))
+       (map assert-line (string-split (assert (cadr r) string?)))))
+
+(: assert-line (-> String Line))
+(define assert-line
+  (let ((line* : Line* (list "green" "E" "D" "C" "B" "red" "Mattapan" "Braintree" "orange" "blue")))
+    (lambda ((x : String))
+      (or
+        (for/or : (U #f Line)
+                ((y : Line (in-list line*))
+                 #:when (string=? x y))
+          y)
+        (error 'assert-line)))))
 
 #| ASSUMPTIONS about source files:
 
@@ -100,7 +111,7 @@
          (cons line (partial-line first-station mt-partial-line)))))
     (define-values (stations hlc) (process-file-body (cddr file*0) (list first-station) lines0 hlc0))
     (define line->connection*
-      (for/list : Line->Connection* ([({line : Line} {partial-line : PartialLine}) hlc])
+      (for/list : Line->Connection* ([({line : Line} {partial-line : PartialLine}) (in-hash hlc)])
         (list line (partial-line-connections partial-line))))
     (values (reverse stations) line->connection*))
   ;; -------------------------------------------------------------------------------------------------
@@ -113,7 +124,7 @@
       [else 
        (define ?station (string-trim (first file*)))
        (cond
-         [(line-specification ?station) 
+         [(line-specification? ?station) 
           => (lambda (lines) (process-file-body (rest file*) stations lines hlc))]
          [else ;; now we know ?station is a station
           (define new-hlc (add-station-to-lines hlc lines ?station))
@@ -129,7 +140,7 @@
       (hash-set hlc1 line (partial-line station connections))))
   ;; -------------------------------------------------------------------------------------------------
   ;; IN: check file format (prefix), then process proper file content 
-  (define lines0 (line-specification (first file*0)))
+  (define lines0 (line-specification? (first file*0)))
   (unless lines0 (error "KNOWLEDGE: we know that the file is properly formatted"))
   (lines->hash lines0))
 
@@ -138,16 +149,16 @@
 (: mbta% MBTA)
 (define mbta%
   (class object% (init-field G stations connection-on bundles)
-    
+
     (: stations-set [Setof Station])
     (define stations-set (apply set stations))
-    
+
     (super-new)
-    
+
     (define/public (render b)
       (define r (memf (lambda ({c : [List String [Setof Line]]}) (subset? (second c) b)) bundles))
-      (if r (first (first r)) (string-join (set-map b (lambda ({x : String}) x)) " ")))
-    
+      (if r (first (first r)) (string-join (set-map b (ann values (-> String String))) " ")))
+
     (define/public (station word)
       (define word# (regexp-quote word))
       (define candidates
@@ -156,10 +167,10 @@
       (if (and (cons? candidates) (empty? (rest candidates)))
           (first candidates)
           candidates))
-    
+
     (define/public (station? s) 
       (set-member? stations-set s))
-    
+
     (define/public (find-path from0 to)
       (define paths* (find-path/aux from0 to))
       (for/list : [Listof Path] ((path paths*))
@@ -175,7 +186,7 @@
                ((station : Station (rest path)))
                (values station (cons (list station (connection-on station predecessor)) r))))
            (reverse result)])))
-    
+
     (: find-path/aux (-> Station Station [Listof [Pairof Station Station*]]))
     (define/private (find-path/aux from0 to)
       (let search :  [Listof [Pairof Station Station*]] ([from from0][visited '()])
