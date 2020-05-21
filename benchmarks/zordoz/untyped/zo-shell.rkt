@@ -14,6 +14,7 @@
 (require "zo-string.rkt"
  "zo-transition.rkt"
  "zo-find.rkt"
+ "../base/untyped.rkt"
  "../base/compiler-zo-parse.rkt")
 
 ;; -----------------------------------------------------------------------------
@@ -52,8 +53,6 @@
   help-msg
 )
 #:transparent)
-;(define-type Command command)
-(define index? integer?)
 
 (define ALST (command "alst"
                       0
