@@ -33,13 +33,13 @@
          [(x)
           (:do-in
            ([(ds size dims js proc)
-             (let: ([arr : Array  arr-expr])
+             (let ([arr : Array  arr-expr])
                (cond [(array? arr)
                       (define ds (array-shape arr))
                       (define dims (vector-length ds))
                       (define size (array-size arr))
                       (define proc (unsafe-array-proc arr))
-                      (define: js : Indexes (make-vector dims 0))
+                      (define js : Indexes (make-vector dims 0))
                       (values ds size dims js proc)]
                      [else
                       (raise-argument-error 'in-array "Array" arr)]))])
@@ -81,7 +81,7 @@
 ;; array functions receive a vector of indices
 (define-syntax-rule (array-lambda (i) body ...)
   (lambda ([i* : (Vectorof Integer)])
-    (let: ([i : Integer (vector-ref i* 0)]) body ...)))
+    (let ([i : Integer (vector-ref i* 0)]) body ...)))
 
 (: make-sawtooth-wave (-> Float (-> Float (-> Indexes Float))))
 (define ((make-sawtooth-wave coeff) freq)

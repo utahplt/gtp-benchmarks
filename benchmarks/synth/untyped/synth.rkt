@@ -14,7 +14,8 @@
            array-strictness)
          (only-in racket/unsafe/ops unsafe-fx+ unsafe-fx<)
          (only-in "array-utils.rkt" next-indexes!)
-         (only-in racket/math exact-floor))
+         (only-in racket/math exact-floor)
+         "../base/untyped.rkt")
 
 ;; --- from array-sequence.rkt
 
@@ -57,10 +58,12 @@
 (define bits-per-sample 16)
 
 (define (freq->sample-period freq)
-  (round (/ fs freq)))
+  (define res (inexact->exact (round (/ fs freq))))
+  (if (index? res) res (error "not index")))
 
 (define (seconds->samples s)
-  (inexact->exact (round (* s fs))))
+  (define res (inexact->exact (round (* s fs))))
+  (if (index? res) res (error "not index")))
 
 ;; --- Oscillators
 

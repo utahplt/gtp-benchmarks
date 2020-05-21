@@ -35,7 +35,7 @@
   (define old-f (unsafe-array-proc arr))
   (unsafe-build-array
    new-ds
-   (λ (new-js)
+   (lambda (new-js)
      (let ([old-js  (old-js)])
        (let loop ([k  0])
          (cond [(k . < . old-dims)

@@ -15,7 +15,7 @@
 (provide array-append*)
 
 (define (array-broadcast-for-append arrs k)
-  (define dss (map (λ (arr ) (array-shape arr)) arrs))
+  (define dss (map array-shape arrs))
   (define dims (apply max (map vector-length dss)))
   (cond [(not (index? dims))  (error 'array-broadcast-for-append "can't happen")]
         [(or (k . < . 0) (k . >= . dims))
@@ -34,7 +34,7 @@
            (values new-arrs dks))]))
 
 (define (array-append* arrs [k 0])
-  (when (null? arrs) (raise-argument-error 'array-append* "nonempty (Listof (Array A))" arrs))
+  (when (null? arrs) (raise-argument-error 'array-append* "nonempty (Listof Array)" arrs))
   (let-values ([(arrs dks)  (array-broadcast-for-append arrs k)])
     (define new-dk (apply + dks))
     (cond

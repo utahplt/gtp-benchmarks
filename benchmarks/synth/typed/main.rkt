@@ -93,7 +93,6 @@
       (note 'D 8 1)
       (cons #f 1)
       (note 'D 6 1)
-      ;; (note 'D 11 1)
       (cons #f 1)
       (note 'D 5 1)
       (note 'D 10 1)
