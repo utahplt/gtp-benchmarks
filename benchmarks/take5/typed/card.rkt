@@ -27,6 +27,10 @@
 (define (>-face c d)
   (> (card-face c) (card-face d)))
 
+(: face? (-> Any Boolean : #:+ Face))
+(define (face? f)
+  (and (exact-nonnegative-integer? f) (< 0 f) (< f 105)))
+
 (: --face (-> Card Card Face))
 (define (--face c d)
-  (cast (- (card-face c) (card-face d)) Face))
+  (assert (- (card-face c) (card-face d)) face?))
