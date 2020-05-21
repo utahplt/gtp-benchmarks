@@ -95,14 +95,11 @@
          (marked-by-label-2? node)))
   (: absorb-children-marks! (-> Node Index Void))
   (define (absorb-children-marks! node depth)
-    ;(let/ec escape
       (for ([child (node-children node)])
         (when (marked-by-label-1? child)
           (mark-with-label-1! node))
         (when (marked-by-label-2? child)
           (mark-with-label-2! node)))
-        ;(when (marked-by-both? node)
-        ;  (escape))))
     (when (and (marked-by-both? node)
                (> depth deepest-depth))
       (set! deepest-depth depth)
@@ -111,7 +108,6 @@
           (= 0 (label-length label-2)))
       (string->label "")
       (main)))
-
 
 
 ;; path-label: node -> label

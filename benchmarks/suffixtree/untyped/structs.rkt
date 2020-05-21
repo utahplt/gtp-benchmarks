@@ -1,5 +1,5 @@
 #lang racket/base
-(require
+(require "../base/untyped.rkt"
          racket/list)
 
 (require "label.rkt"
@@ -24,7 +24,7 @@
   (make-suffix-tree
    ;; The root node has no label, no parent, an empty list of
    ;; children.  Its suffix link is invalid, but we set it to #f.
-   (let ((root (make-node (make-label (make-vector 0)) #f (list) #f)))
+   (let ((root (make-node (make-label (make-vector 0 'X)) #f (list) #f)))
      root)))
 
 
@@ -86,6 +86,7 @@
          (parent (node-parent node))
          (new-node (make-node pre-label parent (children-list node) #f)))
     (set-node-up-label! node post-label)
+    (unless parent (error "node-up-split!"))
     (node-remove-child! parent node)
     (set-node-parent! node new-node)
     (node-add-child! parent new-node)
@@ -121,41 +122,39 @@
 ;; Traverses the node's edges along the elements of the input label.
 ;; Written in continuation-passing-style for leakage containment.
 ;; One of the four continuation arguments will be executed.
-(define node-follow/k
-  (lambda (node original-label
-                matched-at-node/k
-                matched-in-edge/k
-                mismatched-at-node/k
-                mismatched-in-edge/k)
-    (letrec
-        ((EDGE/k
-          ;; follows an edge
-          (lambda (node label label-offset)
-            (let ((up-label (node-up-label node)))
-              (let loop ((k 0))
-                (cond
-                 ((= k (label-length up-label))
-                  (NODE/k node label (+ label-offset k)))
-                 ((= (+ label-offset k) (label-length label))
-                  (matched-in-edge/k node k))
-                 ((label-element-equal? (label-ref up-label k)
-                                        (label-ref label (+ k label-offset)))
-                  (loop (add1 k)))
-                 (else
-                  (mismatched-in-edge/k node k label
-                                        (+ k label-offset))))))))
-         ;; follows a node
-         (NODE/k
-          (lambda (node label label-offset)
-            (if (= (label-length label) label-offset)
-                (matched-at-node/k node)
-                (let ((child (node-find-child
-                              node
-                              (label-ref label label-offset))))
-                  (if child
-                      (EDGE/k child label label-offset)
-                      (mismatched-at-node/k node label label-offset)))))))
-      (NODE/k node (label-copy original-label) 0))))
+(define (node-follow/k node
+                       original-label
+                       matched-at-node/k
+                       matched-in-edge/k
+                       mismatched-at-node/k
+                       mismatched-in-edge/k)
+  (define (EDGE/k node label label-offset)
+    (define up-label (node-up-label node))
+    (let loop ((k 0))
+      (define k+label-offset (+ k label-offset))
+      (cond
+       ((= k (label-length up-label))
+        (unless (index? k+label-offset) (error "node/folllowd"))
+        (NODE/k node label k+label-offset))
+       ((= k+label-offset (label-length label))
+        (unless (index? k) (error "node/followk"))
+        (matched-in-edge/k node k))
+       ((label-element-equal? (label-ref up-label k)
+                              (label-ref label k+label-offset))
+        (loop (add1 k)))
+       (else
+        (unless (and (index? k)
+                     (index? k+label-offset)) (error "node-follow/k mismatched fail"))
+        (mismatched-in-edge/k node k label
+                              k+label-offset)))))
+  (define (NODE/k node label label-offset)
+    (if (= (label-length label) label-offset)
+        (matched-at-node/k node)
+        (let ([child (node-find-child node (label-ref label label-offset))])
+          (if child
+              (EDGE/k child label label-offset)
+              (mismatched-at-node/k node label label-offset)))))
+  (NODE/k node (label-copy original-label) 0))
 
 
 ;; node-position-at-end?: node number -> boolean
