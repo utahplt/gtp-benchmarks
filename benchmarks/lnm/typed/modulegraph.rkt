@@ -188,8 +188,8 @@
   (match m
     [(list _ id _ index name)
      #:when (and id index name)
-     (texnode (or (cast (string->number id) Index) (parse-error "bad node id"))
-              (or (cast (string->number index) Index) (parse-error "bad node index"))
+     (texnode (assert (string->number id) index?)
+              (assert (string->number index) index?)
               name)]
     [else
      (parse-error "Cannot parse node declaration '~a'" str)]))
@@ -204,8 +204,8 @@
     [(list _ id-src id-dst)
      #:when (and id-src id-dst)
      ((inst cons Index Index)
-           (cast (string->number id-src) Index)
-           (cast (string->number id-dst) Index))]
+           (assert (string->number id-src) index?)
+           (assert (string->number id-dst) index?))]
     [else
      (parse-error "Cannot parse edge declaration '~a'" str)]))
 

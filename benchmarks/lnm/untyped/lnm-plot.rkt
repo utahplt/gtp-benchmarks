@@ -28,6 +28,7 @@
     untyped-mean
     variation->mean-runtime)
   plot/pict
+  (only-in pict pict?)
   (only-in racket/math exact-floor)
   (only-in plot/utils linear-seq)
   (only-in racket/math exact-floor exact-ceiling)
@@ -88,7 +89,7 @@
                           #:samples num-samples
                           #:color 'navy
                           #:width THICK))
-      (plot-pict (list N-line M-line cutoff-line F)
+      (define res (plot-pict (list N-line M-line cutoff-line F)
                  #:x-min 0
                  #:x-max xmax
                  #:y-min 0
@@ -96,7 +97,8 @@
                  #:x-label "Overhead (vs. untyped)"
                  #:y-label "Count"
                  #:width width
-                 #:height height))))
+                 #:height height))
+      (if (pict? res) res (error 'lnm)))))
 
 ;; Return a function (-> Real Index) on argument `N`
 ;;  that counts the number of variations
@@ -106,7 +108,8 @@
 (define (count-variations sm L #:cache-up-to [lim #f])
   (define baseline (untyped-mean sm))
   (define cache (and lim (cache-init sm lim #:L L)))
-  (lambda (N)
+  (lambda (N-raw)
+    (define N (if (>= N-raw 0) N-raw (error 'count-variations)))
     (define good? (make-variation->good? sm (* N baseline) #:L L))
     (if (and cache lim (<= N lim))
         ;; Use cache to save some work, only test the variations
