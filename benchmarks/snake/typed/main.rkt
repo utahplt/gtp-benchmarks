@@ -38,7 +38,7 @@
 (define (main hist)
   (define w0 (WORLD))
   (cond [(list? hist)
-         (for ([i (in-range LOOPS)])
+         (for ([_i (in-range LOOPS)])
            (replay w0 hist))]
         [else
          (error "bad input")]))
