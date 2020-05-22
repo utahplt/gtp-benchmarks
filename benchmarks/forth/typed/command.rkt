@@ -38,7 +38,10 @@
       exec)))
 
 ;; True if the argument is a list with one element
-(define-predicate singleton-list? (List Any))
+(: singleton-list? (-> Any Boolean : (List Any)))
+(define (singleton-list? x)
+  (and (pair? x)
+       (null? (cdr x))))
 
 (define-type Binop-Command%
   (Class

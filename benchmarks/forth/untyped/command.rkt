@@ -37,8 +37,7 @@
 
 ;; True if the argument is a list with one element
 (define (singleton-list? x)
-  (and (list? x)
-       (not (null? x))
+  (and (pair? x)
        (null? (cdr x))))
 
 ;; Create a binary operation command.
