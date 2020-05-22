@@ -5092,7 +5092,7 @@
      [else
       (define word-as-list (string->list word-with-dots))
       (: hd (Listof Index))
-      (define hd (make-list (cast (add1 (length word-as-list)) Index) 0))
+      (define hd (make-list (assert (add1 (length word-as-list)) index?) 0))
       ;; bg: typed racket can't handle filtering the Void from a (U Void (Listof Index)) list
       (: tl (Listof (Listof Index)))
       (define tl
@@ -5106,7 +5106,7 @@
                  ;; put together head padding + value + tail padding
                  (cons (append ((inst make-list Index) index 0)
                                value
-                               (make-list (cast (- (add1 (length word-as-list)) (length value) index) Index) 0))
+                               (make-list (assert (- (add1 (length word-as-list)) (length value) index) index?) 0))
                        init)]
                 [else init])))
       (cons hd tl)]))

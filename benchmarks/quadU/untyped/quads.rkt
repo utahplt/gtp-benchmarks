@@ -51,14 +51,11 @@
 
 (require
  require-typed-check
- "../base/quad-types.rkt"
+ "../base/core.rkt"
+ "../base/untyped.rkt"
  (only-in racket/string string-append*))
 
 ;; =============================================================================
-
-(define (assert v p)
-  (unless (p v) (error 'quad "assert"))
-  v)
 
 (define (listof-usq? v)
   (and (list? v) (andmap usq? v)))

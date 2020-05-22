@@ -6,6 +6,8 @@
 
 (require
  require-typed-check
+ "../base/untyped.rkt"
+ "../base/core.rkt"
  (only-in racket/list filter-not)
  (only-in racket/draw font% make-font current-ps-setup pdf-dc% the-color-database)
  (only-in racket/class inherit define/override send* class new super-new send define/public object% this)
@@ -46,14 +48,7 @@
 
 ;; =============================================================================
 
-(define (assert v p)
-  (unless (p v) (error 'render (format "ohnoes ~a ~a" (object-name p) v)))
-  v)
-
-(define (natural? v)
-  (and (integer? v) (<= 0 v)))
-
-(define (nonnegative-float? v)
+(define (nonnegative-flonum? v)
   (and (flonum? v) (<= 0 v)))
 
 ;; =============================================================================
@@ -73,7 +68,7 @@
          (define page-quad-hash (make-hash))
          (for ([q (in-list rendering-input)])
            (when (member (quad-name q) renderable-quads)
-             (hash-update! page-quad-hash (assert (quad-attr-ref q world:page-key) natural?) (λ(v) (cons q v)) (λ() null))))
+             (hash-update! page-quad-hash (assert (quad-attr-ref q world:page-key) exact-nonnegative-integer?) (λ(v) (cons q v)) (λ() null))))
          (map (λ(k) (render-page (hash-ref page-quad-hash k))) (sort (hash-keys page-quad-hash) <)))))
 
     ;(: render-element (-> Quad Any))
@@ -130,9 +125,9 @@
 
     (define/override (render-word w)
       (define word-font (assert (quad-attr-ref w world:font-name-key (world:font-name-default)) string?))
-      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-float?))
-      (define word-style (assert (quad-attr-ref w world:font-style-key (world:font-style-default)) symbol?))
-      (define word-weight (assert (quad-attr-ref w world:font-weight-key (world:font-weight-default)) symbol?))
+      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-flonum?))
+      (define word-style (assert (quad-attr-ref w world:font-style-key (world:font-style-default)) Font-Style?))
+      (define word-weight (assert (quad-attr-ref w world:font-weight-key (world:font-weight-default)) Font-Weight?))
       (define word-color (assert (quad-attr-ref w world:font-color-key (world:font-color-default)) string?))
       (define word-background (assert (quad-attr-ref w world:font-background-key (world:font-background-default)) string?))
       (send dc set-font (get-cached-font word-font word-size word-style word-weight))

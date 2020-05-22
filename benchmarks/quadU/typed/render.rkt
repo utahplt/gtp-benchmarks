@@ -47,6 +47,12 @@
 
 ;; =============================================================================
 
+(: nonnegative-flonum? (-> Any Boolean : #:+ Nonnegative-Float))
+(define (nonnegative-flonum? v)
+  (and (flonum? v) (<= 0 v)))
+
+;; =============================================================================
+
 (define abstract-renderer%
 
   (class object%
@@ -62,7 +68,7 @@
          (define page-quad-hash ((inst make-hash Nonnegative-Integer (Listof Quad))))
          (for ([q (in-list rendering-input)])
            (when (member (quad-name q) renderable-quads)
-             ((inst hash-update! Nonnegative-Integer (Listof Quad)) page-quad-hash (cast (quad-attr-ref q world:page-key) Nonnegative-Integer) (λ(v) ((inst cons Quad (Listof Quad)) q v)) (λ() (ann null (Listof Quad))))))
+             ((inst hash-update! Nonnegative-Integer (Listof Quad)) page-quad-hash (assert (quad-attr-ref q world:page-key) exact-nonnegative-integer?) (λ(v) ((inst cons Quad (Listof Quad)) q v)) (λ() (ann null (Listof Quad))))))
          (map (λ([k : Nonnegative-Integer]) (render-page ((inst hash-ref Nonnegative-Integer (Listof Quad) (Listof Quad)) page-quad-hash k))) (sort (hash-keys page-quad-hash) <)))))
 
     (: render-element (-> Quad Any))
@@ -118,12 +124,12 @@
 
 
     (define/override (render-word w)
-      (define word-font (cast (quad-attr-ref w world:font-name-key (world:font-name-default)) String))
-      (define word-size (cast (quad-attr-ref w world:font-size-key (world:font-size-default)) Nonnegative-Float))
-      (define word-style (cast (quad-attr-ref w world:font-style-key (world:font-style-default)) Font-Style))
-      (define word-weight (cast (quad-attr-ref w world:font-weight-key (world:font-weight-default)) Font-Weight))
-      (define word-color (cast (quad-attr-ref w world:font-color-key (world:font-color-default)) String))
-      (define word-background (cast (quad-attr-ref w world:font-background-key (world:font-background-default)) String))
+      (define word-font (assert (quad-attr-ref w world:font-name-key (world:font-name-default)) string?))
+      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-flonum?))
+      (define word-style (assert (quad-attr-ref w world:font-style-key (world:font-style-default)) Font-Style?))
+      (define word-weight (assert (quad-attr-ref w world:font-weight-key (world:font-weight-default)) Font-Weight?))
+      (define word-color (assert (quad-attr-ref w world:font-color-key (world:font-color-default)) string?))
+      (define word-background (assert (quad-attr-ref w world:font-background-key (world:font-background-default)) string?))
       (send dc set-font (get-cached-font word-font word-size word-style word-weight))
       (define foreground-color (send the-color-database find-color word-color))
       (when foreground-color
@@ -133,12 +139,12 @@
           (send* dc (set-text-mode 'solid) (set-text-background background-color))
           (send dc set-text-mode 'transparent))
 
-      (define word-text (cast (quad-car w) String))
-      (send dc draw-text word-text (cast (quad-attr-ref w world:x-position-key) Float)
+      (define word-text (assert (quad-car w) string?))
+      (send dc draw-text word-text (assert (quad-attr-ref w world:x-position-key) flonum?)
             ;; we want to align by baseline rather than top of box
             ;; thus, subtract ascent from y to put baseline at the y coordinate
-            (- (cast (quad-attr-ref w world:y-position-key) Float)
-               (cast (quad-attr-ref w world:ascent-key 0) Float)) #t))
+            (- (assert (quad-attr-ref w world:y-position-key) flonum?)
+               (assert (quad-attr-ref w world:ascent-key 0) flonum?)) #t))
 
     (define/override (render-page elements)
       (send dc start-page)

@@ -118,6 +118,16 @@
 
 ;; =============================================================================
 
+(: listof-quad? (-> Any Boolean : (Listof Quad)))
+(define (listof-quad? qs)
+  (and (list? qs) (andmap quad? qs)))
+
+(: positive-flonum? (-> Any Boolean : #:+ Positive-Flonum))
+(define (positive-flonum? f)
+  (and (flonum? f) (< 0 f)))
+
+;; =============================================================================
+
 ;; bg: from quads.rkt
  (define-syntax (quad-attr-ref/parameter stx)
    (syntax-case stx ()
@@ -214,10 +224,10 @@
 (: font-attributes-with-defaults (Quad -> (List Positive-Flonum String Font-Weight Font-Style)))
 (define (font-attributes-with-defaults q)
   (list
-   (cast (quad-attr-ref q world:font-size-key) Positive-Flonum)
-   (cast (quad-attr-ref/parameter q world:font-name-key) String)
-   (cast (quad-attr-ref/parameter q world:font-weight-key) Font-Weight)
-   (cast (quad-attr-ref/parameter q world:font-style-key) Font-Style)))
+   (assert (quad-attr-ref q world:font-size-key) positive-flonum?)
+   (assert (quad-attr-ref/parameter q world:font-name-key) string?)
+   (assert (quad-attr-ref/parameter q world:font-weight-key) Font-Weight?)
+   (assert (quad-attr-ref/parameter q world:font-style-key) Font-Style?)))
 
 ;;; get the width of a quad.
 ;;; Try the attr first, and if it's not available, compute the width.
@@ -227,7 +237,7 @@
 (: quad-width Measure-Quad-Type)
 (define (quad-width q)
   (cond
-    [(quad-has-attr? q world:width-key) (cast (quad-attr-ref q world:width-key) Float)]
+    [(quad-has-attr? q world:width-key) (assert (quad-attr-ref q world:width-key) flonum?)]
     [(memq (quad-name q) '(run word char word-break))
      (apply measure-text (word-string q) (font-attributes-with-defaults q))]
     [(eq? 'line (quad-name q)) (foldl fl+ 0.0
@@ -366,7 +376,7 @@
   (apply line (make-quadattrs (quad-attrs line-in))
          (flatten-quadtree (let ([qs : (Listof USQ) (quad-list line-in)])
                              (if (not (empty? qs))
-                                 (append (if before (list (copy-with-attrs before (cast (first qs) Quad))) null)
+                                 (append (if before (list (copy-with-attrs before (assert (first qs) quad?))) null)
                                        (for/list : (Listof QEXP)
                                                   ([q-any (in-list qs)])
                                          (define q (assert q-any quad?))
@@ -374,7 +384,7 @@
                                                                (let ([interleaver (copy-with-attrs middle q)])
                                                                  (list interleaver q interleaver))
                                                                (list q)))
-                                       (if after (list (copy-with-attrs after (cast (last qs) Quad))) null))
+                                       (if after (list (copy-with-attrs after (assert (last qs) quad?))) null))
                                  qs)))))
 
 
@@ -416,7 +426,7 @@
      (define line-quads
        (apply append (for/list : (Listof (Listof Quad))
                                ([r : Quad (in-list rendered-pieces)])
-                       (cast (quad-list r) (Listof Quad)))))
+                       (assert (quad-list r) listof-quad?))))
      (define line-quads-maybe-with-opticals
        (if world:use-optical-kerns?
            (render-optical-kerns
@@ -475,7 +485,7 @@
       (vector
        ;; throw in 0.0 in case for/list returns empty
        ( foldl fl+ 0.0 (for/list : (Listof Float) ([qa : USQ (in-list (quad-list p))])
-                        (define q (cast qa Quad))
+                        (define q (assert qa quad?))
                         (define str (quad->string q))
                         (if (equal? str "")
                             (assert (quad-attr-ref q world:width-key 0.0) flonum?)
@@ -512,7 +522,7 @@
   (define pieces-with-word-space
     (vector-map (λ([piece : Quad])
       (and (quad-has-attr? piece world:word-break-key)
-           (equal? (quad-attr-ref (cast (quad-attr-ref piece world:word-break-key) Quad) world:no-break-key) " "))) pieces))
+           (equal? (quad-attr-ref (assert (quad-attr-ref piece world:word-break-key) quad?) world:no-break-key) " "))) pieces))
   (define (make-first-fit-bps-and-widths)
     (define-values (reversed-bps reversed-widths)
       ;; breakpoints get stacked onto bps, so (car bps) is always the next starting point
@@ -569,7 +579,7 @@
           (define last-piece-to-test (vector-ref pieces (sub1 j)))
           (define new-hyphen?
             (and (quad-has-attr? last-piece-to-test world:word-break-key)
-                 (equal? (quad-attr-ref (cast (quad-attr-ref last-piece-to-test world:word-break-key) Quad) world:before-break-key) "-")))
+                 (equal? (quad-attr-ref (assert (quad-attr-ref last-piece-to-test world:word-break-key) quad?) world:before-break-key) "-")))
           (define cumulative-hyphens (if (not new-hyphen?)
                                          0
                                          (add1 ($penalty-hyphens penalty-up-to-i))))
@@ -644,7 +654,7 @@
   (define width-used (foldl fl+ 0.0 
     (for/list : (Listof Flonum)
               ([q : USQ (in-list fixed-subquads)])
-      (quad-width (cast q Quad)))))
+      (quad-width (assert q quad?)))))
   (define width-remaining (round-float (- target-width width-used)))
   (cond
     ;; check for zero condition because we want to divide by this number

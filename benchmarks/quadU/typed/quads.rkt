@@ -56,6 +56,16 @@
 
 ;; =============================================================================
 
+(: listof-usq? (-> Any Boolean : (Listof USQ)))
+(define (listof-usq? v)
+  (and (list? v) (andmap usq? v)))
+
+(: usq? (-> Any Boolean : USQ))
+(define (usq? v)
+  (or (string? v) (quad? v)))
+
+;; =============================================================================
+
 (: quad-name (-> Quad Symbol))
 (define (quad-name q)
   (car q))
@@ -82,7 +92,7 @@
 
 (: quad-list (-> Quad (Listof USQ)))
 (define (quad-list q)
-  (cast (cddr q) (Listof USQ)))
+  (assert (cddr q) listof-usq?))
 
 ;;bg;
 (: quad-attr-ref (->* ((U Quad QuadAttrs) Symbol) (Any) Any))
@@ -190,7 +200,7 @@
 
 (: word-string (-> Quad String))
 (define (word-string c)
-  (cast (car (quad-list c)) String))
+  (assert (car (quad-list c)) string?))
 
 ;;; -----------------------------------------------------------------------------
 ;

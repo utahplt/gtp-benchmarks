@@ -13,6 +13,8 @@
 
 (require
   require-typed-check
+  "../base/untyped.rkt"
+  "../base/core.rkt"
   "ocm-struct.rkt"
   "penalty-struct.rkt"
   (only-in math/flonum fl+ fl= fl fl/ fl- fl> fl* fllog flabs flmax flexpt)
@@ -117,15 +119,11 @@
 ))
 ;; =============================================================================
 
-(define (assert v p)
-  (unless (p v) (error 'wrap (format "asert ~a ~a" (object-name p) v)))
-  v)
-
 (define (listof-quad? qs)
   (and (list? qs) (andmap quad? qs)))
 
 (define (positive-flonum? f)
-  (and (positive? f) (flonum? f)))
+  (and (flonum? f) (< 0 f)))
 
 ;; =============================================================================
 
@@ -227,8 +225,8 @@
   (list
    (assert (quad-attr-ref q world:font-size-key) positive-flonum?)
    (assert (quad-attr-ref/parameter q world:font-name-key) string?)
-   (assert (quad-attr-ref/parameter q world:font-weight-key) symbol?)
-   (assert (quad-attr-ref/parameter q world:font-style-key) symbol?)))
+   (assert (quad-attr-ref/parameter q world:font-weight-key) Font-Weight?)
+   (assert (quad-attr-ref/parameter q world:font-style-key) Font-Style?)))
 
 ;;; get the width of a quad.
 ;;; Try the attr first, and if it's not available, compute the width.

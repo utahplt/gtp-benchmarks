@@ -8,7 +8,7 @@
 
 (require
   require-typed-check
-  "../base/quad-types.rkt"
+  "../base/core.rkt"
   "../base/untyped.rkt"
   racket/class
   (only-in racket/list append* split-at drop-right)
@@ -155,7 +155,6 @@
 
 ;(: hyphenate-quad-except-last-word (Quad . -> . Quad))
 (define (hyphenate-quad-except-last-word q)
-  ;(log-quad-debug "last word will not be hyphenated")
   (define-values (first-quads last-quad) (split-last (quad-list q)))
   (quad (quad-name q) (make-quadattrs (quad-attrs q))
     (append (for/list  ([q (in-list first-quads)])
@@ -180,23 +179,15 @@
                     ;;    [(<= quality world:draft-quality) wrap-first]
                     ;;    [else wrap-adaptive]))
     (wrap-proc qs))
-  ;(log-quad-debug "wrapping lines")
-  ;(log-quad-debug "quality = ~a" quality)
-  ;(log-quad-debug "looseness tolerance = ~a" world:line-looseness-tolerance)
   (define wrapped-lines-without-hyphens (wrap-quads (assert (quad-list b) listof-quad?))) ; 100/150
-  ;(log-quad-debug* (log-debug-lines wrapped-lines-without-hyphens))
   (define avg-looseness (average-looseness wrapped-lines-without-hyphens))
   (define gets-hyphenation? (and world:use-hyphenation?
                                  (fl> avg-looseness world:line-looseness-tolerance)))
-  ;(log-quad-debug "average looseness = ~a" avg-looseness)
-  ;(log-quad-debug (if gets-hyphenation? "hyphenating" "no hyphenation needed"))
   (define wrapped-lines (if gets-hyphenation?
                             (wrap-quads (split-quad ((if world:allow-hyphenated-last-word-in-paragraph
                                                                (lambda (x ) (assert (hyphenate-quad x) quad?))
                                                                hyphenate-quad-except-last-word) (merge-adjacent-within b))))
                             wrapped-lines-without-hyphens))
-  ;(when gets-hyphenation? (log-quad-debug* (log-debug-lines wrapped-lines)))
-  ;(log-quad-debug "final looseness = ~a" (average-looseness wrapped-lines))
   (map insert-spacers-in-line
        (for/list ;: (Listof Quad)
                ([line-idx (in-naturals)][the-line-any  (in-list wrapped-lines)])
@@ -231,7 +222,6 @@
     (for/fold ([columns  null]
                [lines-remaining  lines])
               ([col-idx (stop-before (in-naturals) (λ(x) (null? lines-remaining)))])
-      ;bg;(log-quad-info "making column ~a" (add1 col-idx))
       ;; domain constraint is best way to simplify csp, because it limits the search space.
       ;; search from largest possible value to smallest.
       ;; largest possible is the minimum of the max column lines, or
@@ -243,7 +233,6 @@
                ;; ... and the smallest possible is 1, or the current minimum lines.
                ;; (sub1 insures that range is inclusive of last value.)
                (sub1 (min 1 world:minimum-lines-per-column)) -1)))
-      ;bg;(log-quad-debug "viable number of lines for this column to start =\n~a" viable-column-range)
       (send prob add-variable "column-lines" viable-column-range)
       ;; greediness constraint: leave enough lines for next page, or take all
       ;(: greediness-constraint (Index . -> . Boolean))
@@ -262,7 +251,6 @@
         (or (paragraph-too-short-to-meet-constraint?)
             (>= (add1 line-index-of-last-line) world:min-last-lines)))
       (send prob add-constraint last-lines-constraint '("column-lines"))
-      ;(log-quad-debug "viable number of lines after last-lines constraint =\n~a" (map (λ(x) (hash-ref x "column-lines")) (send prob get-solutions)))
       ;; first lines constraint: don't take page that will leave too few lines at top of next page
       ;(: first-lines-constraint (Index (Listof Quad) . -> . Boolean))
       (define (first-lines-constraint pl lines-remaining)
@@ -277,7 +265,7 @@
             (>= lines-that-will-remain world:min-first-lines))) ; but if any remain, must be minimum number.
       (send prob add-constraint (λ(x) (first-lines-constraint (assert x index?) lines-remaining)) '("column-lines"))
       (define s (send prob get-solution))
-      (define how-many-lines-to-take (assert (hash-ref s "column-lines") natural?))
+      (define how-many-lines-to-take (assert (hash-ref s "column-lines") exact-nonnegative-integer?))
       (define-values (lines-to-take lines-to-leave) (split-at lines-remaining how-many-lines-to-take))
       (send prob reset)
       (define new-column (quads->column lines-to-take))
@@ -286,7 +274,7 @@
 
 ;(: columns->pages ((Listof Quad) . -> . (Listof Quad)))
 (define (columns->pages cols)
-  (define columns-per-page (assert (quad-attr-ref (car cols) world:column-count-key (world:column-count-key-default)) positive-integer?))
+  (define columns-per-page (assert (quad-attr-ref (car cols) world:column-count-key (world:column-count-key-default)) exact-positive-integer?))
   (define column-gutter (assert (quad-attr-ref (car cols) world:column-gutter-key (world:column-gutter-key-default)) flonum?))
   ;; don't use default value here. If the col doesn't have a measure key,
   ;; it deserves to be an error, because that means the line was composed incorrectly.

@@ -119,9 +119,10 @@
                                         (cons (matrix-proc row-idx col) row-idx))))
 
   (for ([([col : Index-Type] col-idx) (in-indexed col-indices)] #:when (even? col-idx))
-    (define idx-of-last-row (cast (if (= col-idx idx-of-last-col)
+    (define idx-of-last-row (assert (if (= col-idx idx-of-last-col)
                                       (vector-last row-indices)
-                                      (hash-ref (cast (hash-ref minima (vector-ref col-indices (add1 col-idx))) HashTableTop) minima-idx-key)) Index-Type))
+                                      (hash-ref (assert (hash-ref minima (vector-ref col-indices (add1 col-idx))) hash?) minima-idx-key))
+                                    exact-nonnegative-integer?))
     (! minima col (make-minimum (smallest-value-entry col idx-of-last-row))))
   minima)
 
@@ -190,7 +191,7 @@
 
      (for ([col (in-vector cols)])
        (define HT
-         (cast (@ minima col) HashTableTop))
+         (assert (@ minima col) hash?))
        (cond
          [(>= col (vector-length ($ocm-min-entrys ocm)))
           (set-$ocm-min-entrys! ocm (vector-append-entry
@@ -199,7 +200,7 @@
                minima-payload-key)))
           (set-$ocm-min-row-indices! ocm
            (vector-append-index ($ocm-min-row-indices ocm)
-             (cast (@ HT minima-idx-key) Index-Type)))]
+             (assert (@ HT minima-idx-key) exact-nonnegative-integer?)))]
          [(< (($ocm-entry->value ocm)
                (@ HT minima-payload-key))
              (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
@@ -210,7 +211,7 @@
           (set-$ocm-min-row-indices! ocm
             ( vector-set
              ($ocm-min-row-indices ocm) col
-               (cast (@ HT minima-idx-key) Index-Type)))]))
+               (assert (@ HT minima-idx-key) exact-nonnegative-integer?)))]))
 
      (set-$ocm-finished! ocm next)]
 

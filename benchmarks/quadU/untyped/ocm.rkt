@@ -11,20 +11,12 @@
 
 (require
  require-typed-check
+ "../base/untyped.rkt"
  "ocm-struct.rkt"
  (only-in racket/list argmin)
  (only-in racket/sequence sequence->list)
  (only-in racket/vector vector-drop vector-append)
  (for-syntax racket/base racket/syntax))
-
-;; =============================================================================
-
-(define (assert v p)
-  (unless (p v) (error 'ocm "assertion failure"))
-  v)
-
-(define (index-type? v)
-  (and (integer? v) (<= 0 v)))
 
 ;; =============================================================================
 
@@ -130,7 +122,8 @@
   (for ([(col col-idx) (in-indexed col-indices)] #:when (even? col-idx))
     (define idx-of-last-row (assert (if (= col-idx idx-of-last-col)
                                       (vector-last row-indices)
-                                      (hash-ref (assert (hash-ref minima (vector-ref col-indices (add1 col-idx))) hash?) minima-idx-key)) index-type?))
+                                      (hash-ref (assert (hash-ref minima (vector-ref col-indices (add1 col-idx))) hash?) minima-idx-key))
+                                    exact-nonnegative-integer?))
     (! minima col (make-minimum (smallest-value-entry col idx-of-last-row))))
   minima)
 
@@ -208,7 +201,7 @@
                minima-payload-key)))
           (set-$ocm-min-row-indices! ocm
            (vector-append-index ($ocm-min-row-indices ocm)
-             (assert (@ HT minima-idx-key) index-type?)))]
+             (assert (@ HT minima-idx-key) exact-nonnegative-integer?)))]
          [(< (($ocm-entry->value ocm)
                (@ HT minima-payload-key))
              (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
@@ -219,7 +212,7 @@
           (set-$ocm-min-row-indices! ocm
             ( vector-set
              ($ocm-min-row-indices ocm) col
-               (assert (@ HT minima-idx-key) index-type?)))]))
+               (assert (@ HT minima-idx-key) exact-nonnegative-integer?)))]))
 
      (set-$ocm-finished! ocm next)]
 
