@@ -7,54 +7,84 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- (for-syntax typed/racket/base racket/syntax)
  (only-in typed/racket/draw Font-Weight Font-Style))
 
 ;; =============================================================================
 
 (define-type QuadName Symbol)
-(define-predicate QuadName? QuadName)
+(: QuadName? (-> Any Boolean : QuadName))
+(define QuadName? symbol?)
+
 (define-type QuadAttrKey Symbol)
-(define-predicate QuadAttrKey? QuadAttrKey)
+(: QuadAttrKey? (-> Any Boolean : QuadAttrKey))
+(define QuadAttrKey? symbol?)
+
 (define-type QuadAttrValue (U Float Index String Symbol Boolean Quad QuadAttrs QuadList Integer))
-(define-predicate QuadAttrValue? QuadAttrValue)
+(: QuadAttrValue? (-> Any Boolean : QuadAttrValue))
+(define (QuadAttrValue? x)
+  (or (flonum? x) (index? x) (string? x) (symbol? x) (boolean? x) (quad? x) (QuadAttrs? x) (QuadList? x) (exact-integer? x)))
 
 ;; QuadAttr could be a list, but that would take twice as many cons cells.
 ;; try the economical approach.
 (define-type QuadAttr (Pairof QuadAttrKey QuadAttrValue))
-(define-predicate QuadAttr? QuadAttr)
+(: QuadAttr? (-> Any Boolean : QuadAttr))
+(define (QuadAttr? x)
+  (and (pair? x)
+       (QuadAttrKey? (car x))
+       (QuadAttrValue? (cdr x))))
+
 (define-type QuadAttrs (Listof QuadAttr))
-(define-predicate QuadAttrs? QuadAttrs)
+(: QuadAttrs? (-> Any Boolean : QuadAttrs))
+(define (QuadAttrs? x)
+  (and (list? x)
+       (andmap QuadAttr? x)))
 (define quad-attrs? QuadAttrs?)
-#|
-;; mutually recursive version
-(define-type HashableListKey (U Null (Pairof QuadAttrKey HashableListValue)))
-(define-type HashableListValue (Pairof QuadAttrValue HashableListKey))
-(define-type HashableList  HashableListKey)
-(define-predicate HashableList? HashableList)
-|#
+
 (define-type HashableList  (Rec duo (U Null (List* QuadAttrKey Any duo))))
-(define-predicate HashableList? HashableList)
 (define-type JoinableType (U Quad QuadAttrs HashableList))
 
 
 (define-type QuadListItem (U String Quad))
-(define-predicate QuadListItem? QuadListItem)
+(: QuadListItem? (-> Any Boolean : QuadListItem))
+(define (QuadListItem? x)
+  (or (string? x)
+      (quad? x)))
+
 (define-type QuadList (Listof QuadListItem))
-(define-predicate QuadList? QuadList)
-(define-type GroupQuadListItem Quad)
-(define-predicate GroupQuadListItem? GroupQuadListItem)
-(define-type GroupQuadList (Listof GroupQuadListItem))
-(define-predicate GroupQuadList? GroupQuadList)
+(: QuadList? (-> Any Boolean : QuadList))
+(define (QuadList? x)
+  (and (list? x)
+       (andmap QuadListItem? x)))
+
 (define-type (Treeof A) (Rec as (U A (Listof as))))
 
 
 ;; funky implementation
 (define-type Quad (List* QuadName QuadAttrs QuadList))
-(define-predicate Quad? Quad)
+(: quad? (-> Any Boolean : Quad))
+(define (quad? x)
+  (and (pair? x)
+       (let ((a (car x))
+             (b (cdr x)))
+         (and (QuadName? a)
+              (pair? b)
+              (let ((aa (car b))
+                    (bb (cdr b)))
+                (and (QuadAttrs? aa)
+                     (QuadList? bb)))))))
+
 (define-type GroupQuad (List* QuadName QuadAttrs GroupQuadList))
-(define-predicate GroupQuad? GroupQuad)
-(define-predicate quad? Quad)
+
+(define-type GroupQuadListItem Quad)
+(: GroupQuadListItem? (-> Any Boolean : GroupQuadListItem))
+(define GroupQuadListItem? quad?)
+
+(define-type GroupQuadList (Listof GroupQuadListItem))
+(: GroupQuadList? (-> Any Boolean : GroupQuadList))
+(define (GroupQuadList? x)
+  (and (list? x)
+       (andmap GroupQuadListItem? x)))
+
 
 ;; quad wants to be generic
 ;; if it's a function, it must impose a type on its output value
@@ -64,20 +94,38 @@
   (list* name attrs items))
 
 (define-type QuadSet (List QuadName QuadAttrs (Listof Quad)))
-(define-predicate QuadSet? QuadSet)
 
 
 (define-type Font-Name String)
-(define-predicate Font-Name? Font-Name)
-(define-type Font-Size Positive-Flonum)
-(define-predicate Font-Size? Font-Size)
-(define-predicate Font-Weight? Font-Weight)
-(define-predicate Font-Style? Font-Style)
+(: Font-Name? (-> Any Boolean : Font-Name))
+(define Font-Name? string?)
 
-(define-predicate Index? Index)
+(define-type Font-Size Positive-Flonum)
+(: Font-Size? (-> Any Boolean : #:+ Font-Size))
+(define (Font-Size? x)
+  (and (flonum? x) (< 0 x)))
+
+(: Font-Weight? (-> Any Boolean : Font-Weight))
+(define (Font-Weight? x)
+  (or (eq? x 'normal)
+      (eq? x 'bold)
+      (eq? x 'light)))
+
+(: Font-Style? (-> Any Boolean : Font-Style))
+(define (Font-Style? x)
+  (or (eq? x 'normal)
+      (eq? x 'italic)
+      (eq? x 'slant)))
 
 ;; Index is arguably the stricter type for Breakpoint,
 ;; but in practice it's annoying because doing math with Indexes
 ;; often leads to non-Index values.
 (define-type Breakpoint Nonnegative-Integer)
-(define-predicate Breakpoint? Breakpoint)
+(: Breakpoint? (-> Any Boolean : Breakpoint))
+(define (Breakpoint? x)
+  (and (exact-integer? x) (<= 0 x)))
+
+(: listof-quad? (-> Any Boolean : (Listof Quad)))
+(define (listof-quad? x)
+  (and (list? x)
+       (andmap quad? x)))

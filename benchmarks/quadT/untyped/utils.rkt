@@ -25,7 +25,7 @@
 
 (require
   "../base/untyped.rkt"
-  "../base/untyped-predicates.rkt"
+  "../base/core.rkt"
   (only-in racket/list append-map empty? empty split-at-right first splitf-at)
   (only-in racket/string string-append*)
   (only-in math/flonum fl+)
@@ -232,10 +232,6 @@
 (define (compute-line-height line)
   (quad-attr-set line world:height-key
     (quad-attr-ref line world:leading-key (world:leading-key-default))))
-
-;(define/typed (fixed-height? q)
-;  (Quad -> Boolean)
-;  (quad-has-attr? q world:height-key))
 
 (define (quad-height q)
   (assert (quad-attr-ref q world:height-key 0.0) flonum?))

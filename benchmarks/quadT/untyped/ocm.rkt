@@ -19,6 +19,9 @@
 
 ;; =============================================================================
 
+(define (index-type? x)
+  (and (exact-integer? x) (<= 0 x)))
+
 (define-logger ocm)
 
 (define (select-elements xs is)
@@ -112,7 +115,8 @@
   (for ([(col col-idx) (in-indexed col-indices)] #:when (even? col-idx))
     (define idx-of-last-row (assert (if (= col-idx idx-of-last-col)
                                       (vector-last row-indices)
-                                      (hash-ref (assert (hash-ref minima (vector-ref col-indices (add1 col-idx))) hashtabletop?) minima-idx-key)) index-type?))
+                                      (hash-ref (assert (hash-ref minima (vector-ref col-indices (add1 col-idx))) hash?) minima-idx-key))
+                                    index-type?))
     (! minima col (make-minimum (smallest-value-entry col idx-of-last-row))))
   minima)
 
@@ -127,8 +131,8 @@
   (if (= 0 (vector-length col-indices))
       (make-hash)
       (let ([row-indices (reduce-proc row-indices col-indices matrix-proc entry->value)])
-        (define odd-column-minima (concave-minima row-indices (assert (vector-odd-elements (assert col-indices (vectorof any?))) (vectorof index-type?)) matrix-proc entry->value))
-        (interpolate-proc (assert odd-column-minima (hash/c any? any?)) row-indices col-indices matrix-proc entry->value))))
+        (define odd-column-minima (concave-minima row-indices (vector-odd-elements col-indices) matrix-proc entry->value))
+        (interpolate-proc odd-column-minima row-indices col-indices matrix-proc entry->value))))
 
 
 (define no-value 'none)
@@ -178,11 +182,11 @@
      (for ([col (in-vector cols)])
        (cond
          [(>= col (vector-length ($ocm-min-entrys ocm)))
-          (set-$ocm-min-entrys! ocm (vector-append-entry ($ocm-min-entrys ocm) (@ (assert (@ minima col) (hash/c symbol? entry-type?)) minima-payload-key)))
-          (set-$ocm-min-row-indices! ocm (vector-append-index ($ocm-min-row-indices ocm) (@ (assert (@ minima col) (hash/c symbol? index-type?)) minima-idx-key)))]
-         [(< (($ocm-entry->value ocm) (@ (assert (@ minima col) hashtabletop?) minima-payload-key)) (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
-          (set-$ocm-min-entrys! ocm (vector-set ($ocm-min-entrys ocm) col (assert (@ (assert (@ minima col) hashtabletop?) minima-payload-key) entry-type?)))
-          (set-$ocm-min-row-indices! ocm (vector-set ($ocm-min-row-indices ocm) col (assert (@ (assert (@ minima col) hashtabletop?) minima-idx-key) index-type?)))]))
+          (set-$ocm-min-entrys! ocm (vector-append-entry ($ocm-min-entrys ocm) (@ (@ minima col) minima-payload-key)))
+          (set-$ocm-min-row-indices! ocm (vector-append-index ($ocm-min-row-indices ocm) (assert (@ (@ minima col) minima-idx-key) index-type?)))]
+         [(< (($ocm-entry->value ocm) (@ (@ minima col) minima-payload-key)) (($ocm-entry->value ocm) (vector-ref ($ocm-min-entrys ocm) col)))
+          (set-$ocm-min-entrys! ocm (vector-set ($ocm-min-entrys ocm) col (@ (@ minima col) minima-payload-key)))
+          (set-$ocm-min-row-indices! ocm (vector-set ($ocm-min-row-indices ocm) col (assert (@ (@ minima col) minima-idx-key) index-type?)))]))
 
      (set-$ocm-finished! ocm next)]
 

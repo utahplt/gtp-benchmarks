@@ -13,7 +13,8 @@
 
 (require
   "../base/untyped.rkt"
-  "../base/untyped-predicates.rkt"
+  "../base/core.rkt"
+  "../base/quad.rkt"
   "ocm-struct.rkt"
   "penalty-struct.rkt"
   (only-in math/flonum fl+ fl= fl fl/ fl- fl> fl* fllog flabs flmax flexpt)
@@ -495,6 +496,7 @@
      first-fit-bps]
     [else
      (define ($penalty->value x)
+       (assert x $penalty?)
        ($penalty-width x))
      (define initial-value ($penalty 0 0.0))
      ;(log-quad-debug "~a pieces to wrap = ~v" (vector-length pieces) (vector-map quad->string pieces))
@@ -536,7 +538,7 @@
                           ;[(< (length pieces-to-test) (world:minimum-last-line-pieces)) 50000]
                           [else 0.0]))))))]))
 
-     (define ocm (make-ocm penalty (assert $penalty->value entry->value-type/c) initial-value))
+     (define ocm (make-ocm penalty $penalty->value initial-value))
 
      ;; starting from last position, ask ocm for position of row minimum (= new-pos)
      ;; collect this value, and use it as the input next time

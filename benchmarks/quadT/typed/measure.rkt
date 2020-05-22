@@ -29,7 +29,6 @@
 (define max-size 1024.0)
 (define dc (new record-dc%))
 (define-type Measurement-Result-Type (List Float Float Float Float))
-(define mrt? (make-predicate Measurement-Result-Type))
 (define current-text-cache (make-parameter ((inst make-hash (List String String Symbol Symbol) Measurement-Result-Type) '())))
 (define current-font-cache (make-parameter ((inst make-hash (List Font-Name Font-Weight Font-Style) (Instance Font%)) '())))
 

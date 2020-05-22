@@ -301,8 +301,8 @@
 ;; is this the last line? compare current line-idx to total lines
 (: last-line? (Quad -> Boolean))
 (define (last-line? line)
-  (define line-idx (assert (quad-attr-ref line world:line-index-key #f) Index?))
-  (define lines (assert (quad-attr-ref line world:total-lines-key #f) Index?))
+  (define line-idx (assert (quad-attr-ref line world:line-index-key #f) index?))
+  (define lines (assert (quad-attr-ref line world:total-lines-key #f) index?))
   (and line-idx lines (= (add1 line-idx) lines)))
 
 ;; optical kerns are automatically inserted at the beginning and end of a line
@@ -541,8 +541,9 @@
      ;(log-quad-debug "first-fit breakpoints = ~a" first-fit-bps)
      first-fit-bps]
     [else
-     (: $penalty->value ($penalty -> Value-Type))
+     (: $penalty->value (Any -> Value-Type))
      (define ($penalty->value x)
+       (assert x $penalty?)
        ($penalty-width x))
      (define initial-value ($penalty 0 0.0))
      ;(log-quad-debug "~a pieces to wrap = ~v" (vector-length pieces) (vector-map quad->string pieces))
@@ -585,7 +586,7 @@
                           ;[(< (length pieces-to-test) (world:minimum-last-line-pieces)) 50000]
                           [else 0.0]))))))]))
 
-     (define ocm : OCM-Type (make-ocm penalty (cast $penalty->value Entry->Value-Type) initial-value))
+     (define ocm : OCM-Type (make-ocm penalty $penalty->value initial-value))
 
      ;; starting from last position, ask ocm for position of row minimum (= new-pos)
      ;; collect this value, and use it as the input next time

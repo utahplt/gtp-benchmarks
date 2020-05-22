@@ -6,8 +6,8 @@
 
 (require
  "../base/untyped.rkt"
- "../base/untyped-predicates.rkt"
- (only-in racket/math nonnegative-integer?)
+ "../base/core.rkt"
+ "../base/quad.rkt"
  (only-in racket/list filter-not)
  (only-in typed/racket/draw Font% make-font current-ps-setup pdf-dc% the-color-database)
  (only-in typed/racket/class inherit define/override send* class new super-new send define/public object% this)
@@ -58,7 +58,7 @@
          (define page-quad-hash (make-hash))
          (for ([q (in-list rendering-input)])
            (when (member (quad-name q) renderable-quads)
-             (hash-update! page-quad-hash (assert (quad-attr-ref q world:page-key) nonnegative-integer?) (λ(v) (cons q v)) (λ() (assert null (listof quad?))))))
+             (hash-update! page-quad-hash (assert (quad-attr-ref q world:page-key) exact-nonnegative-integer?) (λ(v) (cons q v)) (λ() null))))
          (map (λ(k) (render-page (hash-ref page-quad-hash k))) (sort (hash-keys page-quad-hash) <)))))
 
     (define/public (render-element q)
@@ -112,7 +112,7 @@
 
     (define/override (render-word w)
       (define word-font (assert (quad-attr-ref w world:font-name-key (world:font-name-default)) string?))
-      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-float?))
+      (define word-size (assert (quad-attr-ref w world:font-size-key (world:font-size-default)) nonnegative-flonum?))
       (define word-style (assert (quad-attr-ref w world:font-style-key (world:font-style-default)) Font-Style?))
       (define word-weight (assert (quad-attr-ref w world:font-weight-key (world:font-weight-default)) Font-Weight?))
       (define word-color (assert (quad-attr-ref w world:font-color-key (world:font-color-default)) string?))
@@ -127,10 +127,10 @@
           (send dc set-text-mode 'transparent))
 
       (define word-text (assert (quad-car w) string?))
-      (send dc draw-text word-text (assert (quad-attr-ref w world:x-position-key) float?)
+      (send dc draw-text word-text (assert (quad-attr-ref w world:x-position-key) flonum?)
             ;; we want to align by baseline rather than top of box
             ;; thus, subtract ascent from y to put baseline at the y coordinate
-            (- (assert (quad-attr-ref w world:y-position-key) float?) (assert (quad-attr-ref w world:ascent-key 0) float?)) #t))
+            (- (assert (quad-attr-ref w world:y-position-key) flonum?) (assert (quad-attr-ref w world:ascent-key 0) flonum?)) #t))
 
     (define/override (render-page elements)
       (send dc start-page)

@@ -7,14 +7,7 @@
   set-$ocm-min-row-indices!
   set-$ocm-finished!
   set-$ocm-base!
-  entry-type?
-  index-type?
-  entry->value-type/c
 )
-
-(require
-  "../base/untyped.rkt"
-  racket/math)
 
 ;; =============================================================================
 

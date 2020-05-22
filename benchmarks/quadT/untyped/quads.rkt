@@ -31,16 +31,6 @@
   quads->line
   quad->string
   quads->block
-  ;; -- from quad-types.rkt
-  page-break?
-  column-break?
-  block-break?
-  optical-kern?
-  spacer?
-  run?
-  line?
-  word?
-  word-break?
  )
 
 ;; -----------------------------------------------------------------------------
@@ -49,7 +39,7 @@
   racket/list
  (only-in racket/string string-append*)
  "../base/untyped.rkt"
- "../base/untyped-predicates.rkt")
+ "../base/core.rkt")
 
 ;; =============================================================================
 

@@ -271,10 +271,6 @@
   (quad-attr-set line world:height-key
     (quad-attr-ref line world:leading-key (world:leading-key-default))))
 
-;(define/typed (fixed-height? q)
-;  (Quad -> Boolean)
-;  (quad-has-attr? q world:height-key))
-
 (: quad-height (-> (U GroupQuad Quad) Float))
 (define (quad-height q)
   (assert (quad-attr-ref q world:height-key 0.0) flonum?))
