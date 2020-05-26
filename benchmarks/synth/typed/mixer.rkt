@@ -55,7 +55,7 @@
                    (-> (-> Float Float Float) Array Array Array)
                    (-> (-> Float Float) Array Array)))
 (define array-map
-  (case-lambda:
+  (case-lambda
     [([f : (Float -> Float)] [arr : Array])
      (inline-array-map f arr)]
     [([f : (Float Float -> Float)] [arr0 : Array] [arr1 : Array])

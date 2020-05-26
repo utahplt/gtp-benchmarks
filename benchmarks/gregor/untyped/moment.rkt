@@ -126,7 +126,6 @@
 
 ;(: moment->jd (-> Any Exact-Rational))
 (define (moment->jd m)
-  (unless (Moment? m) (error "moment->jd type error"))
   (datetime->jd
    (moment->datetime/local
     (moment-in-utc m))))

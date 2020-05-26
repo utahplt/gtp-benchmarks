@@ -60,7 +60,7 @@
     (define PAYOFF-TABLE
       (vector (vector (cons 3 3) (cons 0 4))
               (vector (cons 4 0) (cons 1 1))))
-    
+
     (class object%
       (init-field
        current ;; State 
@@ -68,7 +68,7 @@
        table   ;; [Vectorof [Vectorof State]] 
        (original current))
       (super-new)
-      
+
       (define/public (match-pair other r)
         (define c1 (box (get-field current this)))
         (define y1 (box (get-field payoff this)))
@@ -92,33 +92,30 @@
         (set-field! current other (unbox c2))
         (set-field! payoff  other (unbox y2))
         (values this other))
-      
+
       ;; State Payoff -> Void
       (define/public (jump input delta) ;; <--- should be friendly
         (set! current (vector-ref (vector-ref table current) input))
         (set! payoff (+ payoff delta)))
-      
+
       (define/public (pay)
         payoff)
-      
+
       (define/public (reset)
         (new automaton% [current original][payoff 0][table table]))
-      
+
       (define/public (clone)
         (new automaton% [current original][payoff 0][table table]))
-      
+
       ;; State -> [Cons Payoff Payoff]
       (define/private (compute-payoffs other-current)
         (vector-ref (vector-ref PAYOFF-TABLE current) other-current))
-      
+
       (define/public (equal other)
         (and (= current (get-field current other))
              (= original (get-field original other))
              (= payoff (get-field payoff other))
-             (equal? table (get-field table other))))
-      
-      (define/public (guts)
-        (list current original payoff table)))))
+             (equal? table (get-field table other)))))))
 
 
 (define COOPERATE 0)

@@ -23,13 +23,6 @@
   bulls
 ))
 
-;; For the assert
-(define (stack? s)
-  (and (list? s)
-    (for/and ((x (in-list s))) (card? x))
-    (let ((l (length s)))
-      (and (< 0 l) (< l 6)))))
-
 ;; ---------------------------------------------------------------------------------------------------
 
 (define (create-deck card-pool)
