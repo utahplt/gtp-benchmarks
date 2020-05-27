@@ -220,7 +220,7 @@
 (: build-array ((Vectorof Integer) ((Vectorof Integer) -> Float) -> Array))
 (define (build-array ds proc)
   (let ([ds  (check-array-shape
-              ds (lambda () (raise-argument-error 'build-array "(Vectorof Integer)" 0 ds proc)))])
+              ds (lambda () (raise-argument-error 'build-array "(Vectorof Index)" 0 ds proc)))])
     (define arr
       (unsafe-build-array ds (lambda ([js : (Vectorof Integer)])
                                (proc (vector->immutable-vector js)))))
@@ -249,7 +249,7 @@
 (: make-array ((Vectorof Integer) Float -> Array))
 (define (make-array ds v)
   (let ([ds  (check-array-shape
-              ds (λ () (raise-argument-error 'make-array "(Vectorof Integer)" 0 ds v)))])
+              ds (λ () (raise-argument-error 'make-array "(Vectorof Index)" 0 ds v)))])
     (unsafe-build-simple-array ds (λ (js) v))))
 
 ;; --- from mutable-array.rkt

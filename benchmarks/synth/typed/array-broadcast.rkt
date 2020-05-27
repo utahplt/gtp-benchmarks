@@ -57,7 +57,8 @@
         [else  (define new-arr (shift-stretch-axes arr ds))
                (if (or (array-strict? arr) ((array-size new-arr) . fx<= . (array-size arr)))
                    new-arr
-                   (begin (array-default-strict! new-arr) new-arr))]))
+                   (begin (array-default-strict! new-arr)
+                          new-arr))]))
 
 (: shape-insert-axes (Indexes Integer -> Indexes))
 (define (shape-insert-axes ds n)

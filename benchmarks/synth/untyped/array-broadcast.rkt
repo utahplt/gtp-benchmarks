@@ -52,7 +52,7 @@
                (if (or (array-strict? arr) ((array-size new-arr) . fx<= . (array-size arr)))
                    new-arr
                    (begin (array-default-strict! new-arr)
-                   new-arr))]))
+                          new-arr))]))
 
 (define (shape-insert-axes ds n)
   (vector-append (make-vector n 1) ds))

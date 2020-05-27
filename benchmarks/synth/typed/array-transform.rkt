@@ -32,7 +32,7 @@
   (define dims (apply max (map vector-length dss)))
   (cond [(not (index? dims))  (error 'array-broadcast-for-append "can't happen")]
         [(or (k . < . 0) (k . >= . dims))
-         (raise-argument-error 'array-append* (format "Integer < ~a" dims) k)]
+         (raise-argument-error 'array-append* (format "Index < ~a" dims) k)]
         [else
          (let* ([dss  (map (λ ([ds : Indexes])
                              (define dms (vector-length ds))
