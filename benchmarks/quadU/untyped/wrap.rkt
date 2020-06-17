@@ -32,24 +32,23 @@
   round-float ;(-> Float Float)]
 ))
 (require (only-in "quads.rkt"
-  quad? quad
-  optical-kern ;(->* ((Listof Any)) () #:rest USQ Quad))
-  line ;(->* ((Listof Any)) () #:rest USQ Quad)]
-  optical-kern? ;(-> Any Boolean)]
-  piece ;(->* ((Listof Any)) () #:rest USQ Quad)]
-  word-break ;(->* ((Listof Any)) () #:rest USQ Quad)]
-  quad->string ;(-> Quad String)]
-  quad-attr-ref ;(((U Quad QuadAttrs) Symbol) (Any) . ->* . Any)]
-  quad-attrs ;(-> Quad (Listof Any))]
-  quad-has-attr? ;(-> Quad Symbol Boolean)]
-  quad-list ;(Quad -> (Listof USQ))]
-  quad-name ;(Quad -> Symbol)]
-  make-quadattrs ;(-> (Listof Any) QuadAttrs)]
-  quads->line ;(->; (Listof Quad) Quad)]
-  spacer ;(->* ((Listof Any))()  #:rest USQ Quad)]
-  whitespace/nbsp? ;(-> Any Boolean)]
-  whitespace? ;(-> Any Boolean)]
-  word-string ;(-> Quad String)]
+  optical-kern
+  line
+  optical-kern?
+  piece
+  word-break
+  quad->string
+  quad-attr-ref
+  quad-attrs
+  quad-has-attr?
+  quad-list
+  quad-name
+  make-quadattrs
+  quads->line
+  spacer
+  whitespace/nbsp?
+  whitespace?
+  word-string
 ))
 (require (only-in "world.rkt"
   world:last-line-can-be-short ;Boolean]
