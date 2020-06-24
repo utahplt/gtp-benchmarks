@@ -1,8 +1,11 @@
 #lang typed/racket/base
 
 (provide
- (all-defined-out)
+ (except-out (all-defined-out) quad)
  (all-from-out typed/racket/draw))
+
+(require (only-in typed/racket/unsafe unsafe-provide))
+(unsafe-provide quad)
 
 ;; -----------------------------------------------------------------------------
 
