@@ -62,7 +62,7 @@
 
 ;; -----------------------------------------------------------------------------
 
-(require/typed "tree.rkt"
+(require/typed/check "tree.rkt"
   (#:opaque HandOut hand-out?)
   (lplaced% LPlaced%)
   (generate-tree (-> State (Instance ATree%)))
