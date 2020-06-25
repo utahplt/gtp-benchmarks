@@ -6,6 +6,8 @@
   generate-tree
   tree-next
   hand-out?
+
+  HandOut
 )
 
 (require

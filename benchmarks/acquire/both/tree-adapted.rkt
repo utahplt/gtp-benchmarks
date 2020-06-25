@@ -62,7 +62,10 @@
 
 ;; -----------------------------------------------------------------------------
 
-(require/typed/check "tree.rkt"
+;; If tree.rkt is typed, want (require "tree.rkt") to get the HandOut type
+;; If untyped, use require/typed to make an opaque type from the predicate
+(require "benchmark-util.rkt")
+(require/typed/check2 "tree.rkt"
   (#:opaque HandOut hand-out?)
   (lplaced% LPlaced%)
   (generate-tree (-> State (Instance ATree%)))
