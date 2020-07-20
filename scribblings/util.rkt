@@ -87,8 +87,11 @@
   (map md5sum (glob (build-path dir "**" "*.rkt"))))
 
 (define BENCHMARK-NAME*
-  (for/list ((x (in-list (directory-list benchmarks-path))))
-    (string->symbol (path->string x))))
+  (for/list ((x (in-list
+                  (map (compose1 string->symbol path->string)
+                       (directory-list benchmarks-path))))
+             #:unless (eq? 'compiled x))
+    x))
 
 (define benchmarks-key*
   (sort BENCHMARK-NAME* symbol<?)
@@ -427,7 +430,10 @@
   (void
     (clean-directory! src))
   (define udir (build-path src untyped-name))
-  (make-modulegraph (glob (build-path udir "*.rkt"))))
+  (define rkt* (glob (build-path udir "*.rkt")))
+  (unless (pair? rkt*)
+    (raise-argument-error 'get-modulegraph "directory with .rkt files" udir))
+  (make-modulegraph rkt*))
 
 (define (clean-directory! dir)
   (log-gtp-benchmarks-info "cleaning directory '~a'" dir)

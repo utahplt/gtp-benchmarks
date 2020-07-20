@@ -11,7 +11,7 @@
     (complete-path->exported-identifiers
       (-> path-string? (listof symbol?)))
     (make-modulegraph
-      (-> (listof path-string?) modulegraph?))
+      (-> (and/c pair? (listof path-string?)) modulegraph?))
     (modulegraph->num-modules
       (-> modulegraph? natural?))
     (modulegraph->modules

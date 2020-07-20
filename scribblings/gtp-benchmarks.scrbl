@@ -109,6 +109,22 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
+    @history[#:changed "6.0"
+             @elem{@bold{Major Release}.
+                   Edited all benchmarks to match up typed and untyped code.
+                   Typed code now uses @racket[assert] instead of @racket[cast]
+                    and untyped code uses an untyped version of the same
+                    predicate function.
+                   Reordered functions / methods so that a per-file diff lines
+                    up; the only differences between files now should be
+                    types and @racket[require] forms.
+
+                   After, @bm{lnm} has lower overhead because of new asserts
+                    in untyped code.
+                   Both @bm{quadU} and @bm{quadT} have higher overhead,
+                    possibly because Typed Racket fixed a soundness hole in
+                    the meantime (@hyperlink["https://github.com/racket/typed-racket/commit/1643443502a54d557e4043de0d7e0b9a5e41ba7c"]{1643443}).}]]
+  @item[
     @history[#:changed "5.0"
              @elem{(1) Remove an unused call to @racket[format] in the typed
                    version of @bm{zordoz}. This change @bold{significantly}
