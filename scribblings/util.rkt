@@ -597,7 +597,7 @@
                   (path->directory-path (build-path benchmarks-path "gregor"))))
 
   (test-case "get-untyped-loc"
-    (check-equal? (get-untyped-loc (benchmark->typed/untyped-dir 'dungeon)) 541))
+    (check-equal? (get-untyped-loc (benchmark->typed/untyped-dir 'dungeon)) 547))
 
   (test-case "get-typed-loc"
     (check-equal? (get-typed-loc (benchmark->typed/untyped-dir 'dungeon)) 610))
@@ -660,8 +660,8 @@
       (check-equal? (hash-ref si "# Bnd.") 1)
       (check-equal? (hash-ref si "# Exp.") 9))
     (let ((zi (get-gradual-typing-static-info 'zombie)))
-      (check-equal? (hash-ref zi "Untyped LOC") 308)
-      (check-equal? (hash-ref zi "Annotation LOC") 26)
+      (check-equal? (hash-ref zi "Untyped LOC") 309)
+      (check-equal? (hash-ref zi "Annotation LOC") 25)
       (check-equal? (hash-ref zi "# Modules") 4)
       (check-equal? (hash-ref zi "# Bnd.") 3)
       (check-equal? (hash-ref zi "# Exp.") 15)))
