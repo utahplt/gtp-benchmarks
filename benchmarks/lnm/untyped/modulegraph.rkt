@@ -93,7 +93,7 @@
          (parse-error "Input is not a TiKZ picture")]
         [(string=? "\\begin{tikzpicture}" (string-trim line))
          ;; Success! We have id'd this file as a TiKZ picture
-         port]
+         (void)]
         [else
          ;; Try again with what's left
          (ensure-tikz port)]))
