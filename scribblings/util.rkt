@@ -29,7 +29,8 @@
     ~a
     ~r)
   (only-in racket/list
-    make-list)
+    make-list
+    group-by)
   (only-in racket/math
     pi
     exact-ceiling
@@ -489,20 +490,24 @@
       (format-rtc-info* (cdr bm+rtc)))))
 
 (define (format-rtc-info* rtc*)
-  (define seen (mutable-set))
-  (for/list ((rtc (in-list rtc*))
-             #:unless (set-member? seen (require-typed-check-info-src rtc)))
-    (set-add! seen (require-typed-check-info-src rtc))
-    (format-rtc-info rtc)))
+  (define k+elem*
+    (for/list ((rtcm* (in-list (group-by require-typed-check-info-src rtc*)))
+               #:unless (null? rtcm*))
+      (format-rtc-info rtcm*)))
+  (map cdr (sort k+elem* string<? #:key car)))
 
-(define (format-rtc-info rtc)
-  (define importing-mod (require-typed-check-info-src rtc))
-  (define sexp (require-typed-check-info-sexp rtc))
-  (list
-    (emph (path->string (file-name-from-path importing-mod)))
-    (linebreak)
-    (verbatim (pretty-format sexp))
-    (linebreak)))
+(define (format-rtc-info rtcm*)
+  (define importing-mod (require-typed-check-info-src (car rtcm*)))
+  (define mod-key (path->string (file-name-from-path importing-mod)))
+  (define sexp* (sort (map require-typed-check-info-sexp rtcm*) string<? #:key cadr))
+  (cons
+    mod-key
+    (list
+      (emph mod-key)
+      (linebreak)
+      (for/list ((sexp (in-list sexp*)))
+        (verbatim (pretty-format sexp)))
+      (linebreak))))
 
 (define (format-types t*)
   (apply itemize (for/list ((t (in-list t*))) (item (~a t)))))
