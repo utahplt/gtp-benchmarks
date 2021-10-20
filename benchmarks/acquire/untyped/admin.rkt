@@ -16,10 +16,6 @@
  "state.rkt"
  "tree.rkt"
 )
-(require (only-in racket/sandbox
-  call-with-limits
-  exn:fail:resource?
-))
 (require (only-in "basics.rkt"
   ALL-HOTELS
   hotel?
@@ -35,19 +31,11 @@
   ((let/ec fail
            (let ([a
                     (with-handlers
-                      ((exn:fail:resource?
-                        (lambda (x)
-                          (fail
-                           (lambda () (failure 'R)))));`(R ,(exn-message x)))))))
-                       (exn:fail:out-of-memory?
-                        (lambda (x)
-                          (fail
-                           (lambda () (failure 'R)))));`(R ,(exn-message x)))))))
-                       (exn:fail?
+                      ((exn:fail?
                         (lambda (x)
                           (fail
                            (lambda () (failure 'X)))))) ;`(X ,(exn-message x))))))))
-                      (call-with-limits sec-limit mb-limit producer))])
+                      (producer))])
              (lambda () (consumer a))))))
 
 

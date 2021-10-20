@@ -19,10 +19,6 @@
  "state-adapted.rkt"
  "tree-adapted.rkt"
 )
-(require/typed racket/sandbox
-  (call-with-limits (All (A) (-> Natural Natural (-> A) A)))
-  (exn:fail:resource? (All (A) (-> A Boolean)))
-)
 (require/typed/check "basics.rkt"
   (ALL-HOTELS (Listof Hotel))
   (hotel? (-> Any Boolean))
@@ -45,19 +41,11 @@
   ((let/ec fail : (-> B)
            (let ([a : A
                     (with-handlers
-                      ((exn:fail:resource?
-                        (lambda ([x : Any])
-                          (fail
-                           (lambda () (failure 'R)))));`(R ,(exn-message x)))))))
-                       (exn:fail:out-of-memory?
-                        (lambda ([x : Any])
-                          (fail
-                           (lambda () (failure 'R)))));`(R ,(exn-message x)))))))
-                       (exn:fail?
+                      ((exn:fail?
                         (lambda ([x : Any])
                           (fail
                            (lambda () (failure 'X)))))) ;`(X ,(exn-message x))))))))
-                      ((inst call-with-limits A) sec-limit mb-limit producer))])
+                      (producer))])
              (lambda () (consumer a))))))
 
 
