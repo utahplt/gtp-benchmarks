@@ -27,7 +27,7 @@
 ;; =============================================================================
 
 (: go (-> Void))
-(define (go extra)
+(define (go)
   (define p0 (ordered-players 10))
   (define p1 (random-players 10))
   (define p (append p0 p1))
