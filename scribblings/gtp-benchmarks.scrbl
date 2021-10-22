@@ -109,13 +109,17 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
-    @history[#:changed "7.0"
+    @history[#:changed "8.0"
              @elem{Remove @racket[racket/sandbox] dependency from @bm{acquire}
                    and change the benchmark to stop using a player AI that times out.
                    Timing info from sandbox depends on system calls; measurements should
                    be more stable without it.
                    Based on a first measurment, the typed/untyped overhead in @racket[acquire]
                    is the same before and after.}]]
+  @item[
+    @history[#:changed "7.0"
+             @elem{Fix a typed/untyped mismatch in @bm{lnm}; both versions of a
+                   certain helper function return @racket[(void)] now.}]]
   @item[
     @history[#:changed "6.0"
              @elem{@bold{Major Release}.
