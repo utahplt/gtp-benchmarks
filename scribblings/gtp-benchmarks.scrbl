@@ -40,7 +40,11 @@ This package contains benchmarks for measuring the cost of typed/untyped
 
 @section[#:tag "gtp:api"]{Running a benchmark}
 
-Three options:
+There are three ways to run a benchmark:
+either by copying code,
+using the @racketmodname[gtp-measure] package,
+or running a setup script.
+
 
 @subsection[#:tag "gtp:quick-run"]{Quick Route}
 
