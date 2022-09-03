@@ -4,6 +4,8 @@
   gtp-benchmarks/scribblings/util
   scriblib/figure
   scribble/example
+  pict
+  racket/runtime-path
   (only-in setup/getinfo get-info)
   (for-label
     require-typed-check
@@ -37,6 +39,14 @@ This package contains benchmarks for measuring the cost of typed/untyped
  interaction in Typed Racket.
 
 @bold{Always include a version number when reporting data on these benchmarks.}
+
+@(define-runtime-path img "./img/")
+@(let* ((n-pict 6)
+        (ww 100)
+        (sep 10)
+        (base (blank (+ (* ww n-pict) (* sep (- n-pict 1))) (* 10/9 ww)))
+        (pp* (for/list ((i (in-range n-pict))) (scale-to-fit (bitmap (build-path img (format "gtp-~a.png" i))) ww ww))))
+   (cc-superimpose base (apply hc-append sep pp*)))
 
 @section[#:tag "gtp:api"]{Running a benchmark}
 
