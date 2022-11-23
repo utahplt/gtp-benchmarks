@@ -181,9 +181,9 @@
        #t))
 
 ;;bg; changed from shares-order/c
-(: shares-order? (-> Any Boolean))
+(: shares-order? (-> (Listof Hotel) Boolean))
 (define (shares-order? x*)
-  (define h* (assert x* listof-hotel?))
+  (define h* x* #;(assert x* listof-hotel?))
   (and
    (not (null? h*))
    (let ([h1 : Hotel (car h*)])
@@ -194,14 +194,14 @@
 
 (: player-shares0 Shares)
 (define player-shares0
-  (make-hash (for/list : (Listof (Pairof Hotel Share))
-                       ([h (in-list ALL-HOTELS)])
-               (cons h 0))))
+  (make-immutable-hash (for/list : (Listof (Pairof Hotel Share))
+                           ([h (in-list ALL-HOTELS)])
+                         (cons h 0))))
 
 (define banker-shares0
-  (make-hash (for/list : (Listof (Pairof Hotel Share))
-                       ([h (in-list ALL-HOTELS)])
-               (cons h SHARES0))))
+  (make-immutable-hash (for/list : (Listof (Pairof Hotel Share))
+                           ([h (in-list ALL-HOTELS)])
+                         (cons h SHARES0))))
 
 (: shares? (-> Any Boolean))
 (define (shares? x)
@@ -240,8 +240,6 @@
 
 (: ext:shares-available (-> Shares Hotel Share))
 (define (ext:shares-available s h)
-  (unless (shares-order? h)
-    (error 'shares-available (format "Precondition: shares-order ~a\n" h)))
   (shares-available s h))
 
 (: shares-available (-> Shares Hotel Share))
@@ -250,7 +248,7 @@
 
 (: ext:shares-available? (-> Shares (Listof Hotel) Boolean))
 (define (ext:shares-available? available-s hotels)
-  (unless (shares-order? available-s)
+  (unless (shares-order? hotels)
     (error 'shares-available "Precondition"))
   (shares-available? available-s hotels))
 

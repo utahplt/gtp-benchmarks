@@ -51,7 +51,7 @@
 
     ;; template hook pattern: template
     (define/public (founding n order-policies)
-      (unless (shares-order? order-policies)
+      (unless (andmap shares-order? order-policies)
         (error 'atree-founding "Precondition"))
       (traversal n order-policies (is-action FOUNDING)))
 

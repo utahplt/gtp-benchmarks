@@ -30,12 +30,7 @@
 (define (in-sandbox producer consumer failure #:time (sec-limit 1) #:memory (mb-limit 30))
   ((let/ec fail
            (let ([a
-                    (with-handlers
-                      ((exn:fail?
-                        (lambda (x)
-                          (fail
-                           (lambda () (failure 'X)))))) ;`(X ,(exn-message x))))))))
-                      (producer))])
+                    (producer)])
              (lambda () (consumer a))))))
 
 
@@ -107,8 +102,6 @@
                 [(boolean? tile) 
                  (finish state)
                  (list IMPOSSIBLE (state-score state) (reverse (cons state states)))]
-                [(not hotel-involved)
-                 (error "bad hotel")]
                 [else 
                  (define merger? (eq? (what-kind-of-spot (state-board state) tile) MERGING))
                  (cond

@@ -107,7 +107,7 @@
  (hotel? (-> Any Boolean))
  (SAFE# Natural)
  (price-per-share (-> Hotel Natural (Option Cash)))
- (shares-order? (-> Any Boolean))
+ (shares-order? (-> (Listof Hotel) Boolean))
  (hotel->color (-> Hotel Color))
  (hotel->label (-> Hotel String))
 )
@@ -613,9 +613,9 @@
 (define (set-board board tile kind hotel)
   (cond
     [(eq? FOUNDING kind) (if hotel (found-hotel board tile hotel) (place-tile board tile))]
-    [(and hotel (eq? MERGING kind)) (merge-hotels board tile hotel)]
-    [(and hotel (eq? SINGLETON kind)) (place-tile board tile)]
-    [(and hotel (eq? GROWING kind)) (grow-hotel board tile)]
+    [(eq? MERGING kind) (merge-hotels board tile (assert hotel))]
+    [(eq? SINGLETON kind) (place-tile board tile)]
+    [(eq? GROWING kind) (grow-hotel board tile)]
     [else (error 'nopers)]))
 
 (: ext:affordable? (-> Board (Listof Hotel) Cash Boolean))

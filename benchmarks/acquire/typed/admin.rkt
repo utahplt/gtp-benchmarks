@@ -24,7 +24,7 @@
   (hotel? (-> Any Boolean))
   (shares-available? (-> Shares (Listof Hotel) Boolean))
   (shares? (-> Any Boolean))
-  (shares-order? (-> Any Boolean))
+  (shares-order? (-> (Listof Hotel) Boolean))
 )
 
 ;; =============================================================================
@@ -40,12 +40,7 @@
 (define (in-sandbox producer consumer failure #:time (sec-limit 1) #:memory (mb-limit 30))
   ((let/ec fail : (-> B)
            (let ([a : A
-                    (with-handlers
-                      ((exn:fail?
-                        (lambda ([x : Any])
-                          (fail
-                           (lambda () (failure 'X)))))) ;`(X ,(exn-message x))))))))
-                      (producer))])
+                    (producer)])
              (lambda () (consumer a))))))
 
 
@@ -121,8 +116,6 @@
                 [(boolean? tile) 
                  (finish state)
                  (list IMPOSSIBLE (state-score state) (reverse (cons state states)))]
-                [(not hotel-involved)
-                 (error "bad hotel")]
                 [else 
                  (define merger? (eq? (what-kind-of-spot (state-board state) tile) MERGING))
                  (cond
@@ -182,7 +175,7 @@
     ;; (Any -> Any) -- success continuation 
     ;; (Any -> Any) -- failure continuation 
     ;; -> (Instance ATree%)
-    (: exec (-> (Instance Player%) (Instance ATree%) Tile Hotel Decisions (Listof Hotel) (-> (Instance ATree%) State RunResult) (-> Any RunResult) RunResult))
+    (: exec (-> (Instance Player%) (Instance ATree%) Tile (Option Hotel) Decisions (Listof Hotel) (-> (Instance ATree%) State RunResult) (-> Any RunResult) RunResult))
     (define/private (exec external tree0 placement hotel decisions shares-to-buy succ fail)
       (define-values (tile tree)
         (tree-next tree0 placement hotel decisions shares-to-buy next-tile))

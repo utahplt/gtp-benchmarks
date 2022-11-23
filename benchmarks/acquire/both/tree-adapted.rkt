@@ -69,6 +69,6 @@
   (#:opaque HandOut hand-out?)
   (lplaced% LPlaced%)
   (generate-tree (-> State (Instance ATree%)))
-  (tree-next (-> (Instance ATree%) Tile Hotel Decisions (Listof Hotel) (-> (Listof Tile) Tile) (Values (Option Tile) (Instance ATree%))))
+  (tree-next (-> (Instance ATree%) Tile (Option Hotel) Decisions (Listof Hotel) (-> (Listof Tile) Tile) (Values (Option Tile) (Instance ATree%))))
   (tree-state (-> (Instance ATree%) State))
 )
