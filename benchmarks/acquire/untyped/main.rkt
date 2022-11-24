@@ -30,7 +30,7 @@
   (define p1 (random-players 10))
   (define p (append p0 p1))
   (define-values (two-status _score two-run)
-    (let ([r (run p 10 #:show show #:choice randomly-pick)])
+    (let ([r (run p 100 #:show show #:choice randomly-pick)])
       (values (car r) (cadr r) (caddr r))))
   ;(displayln `(,(length two-run) ,two-status))
   (void))

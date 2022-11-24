@@ -190,7 +190,7 @@
      (for/and : Boolean
               ([h2 : Hotel (in-list (cdr h*))])
        (string=? h1 h2)))
-   (<= SHARES-PER-TURN# (length h*))))
+   (<= (length h*) SHARES-PER-TURN#)))
 
 (: player-shares0 Shares)
 (define player-shares0

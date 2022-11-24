@@ -31,7 +31,7 @@
 (define (ext:aux:partition lo-h-size selector info)
   (define s* (map selector lo-h-size))
   (define s1 (sort s* <=))
-  (define s2 (sort s* <=))
+  (define s2 (sort s* >))
   (unless (or (equal? s* s1) (equal? s* s2))
     (error 'aux:partition "Precondition: expected a sorted list"))
   ((inst aux:partition A B) lo-h-size selector info))

@@ -165,7 +165,7 @@
      (for/and
               ([h2  (in-list (cdr h*))])
        (string=? h1 h2)))
-   (<= SHARES-PER-TURN# (length h*))))
+   (<= (length h*) SHARES-PER-TURN#)))
 
 (define player-shares0
   (make-immutable-hash (for/list
