@@ -530,9 +530,9 @@
 (define (set-board board tile kind hotel)
   (cond
     [(eq? FOUNDING kind) (if hotel (found-hotel board tile hotel) (place-tile board tile))]
-    [(and hotel (eq? MERGING kind)) (merge-hotels board tile hotel)]
-    [(and hotel (eq? SINGLETON kind)) (place-tile board tile)]
-    [(and hotel (eq? GROWING kind)) (grow-hotel board tile)]
+    [(eq? MERGING kind) (merge-hotels board tile (assert hotel string?))]
+    [(eq? SINGLETON kind) (place-tile board tile)]
+    [(eq? GROWING kind) (grow-hotel board tile)]
     [else (error 'nopers)]))
 
 (define (ext:affordable? board hotels budget)
