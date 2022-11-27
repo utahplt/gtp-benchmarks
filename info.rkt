@@ -3,7 +3,7 @@
 (define deps '("base" "typed-racket-lib" "typed-racket-more" "require-typed-check"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib" "typed-racket-doc" "at-exp-lib" "gtp-util" "pict-lib" "scribble-abbrevs" "syntax-sloc" "with-cache"))
 (define pkg-desc "Gradual typing benchmark programs")
-(define version "8.0")
+(define version "8.1")
 (define pkg-authors '(ben))
 (define scribblings '(("scribblings/gtp-benchmarks.scrbl" () ("Benchmarks"))))
 (define compile-omit-paths '("benchmarks" "utilities/sample-gtp-measure-manifest.rkt"))
