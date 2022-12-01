@@ -248,7 +248,7 @@ Note: these graphs do not show @emph{type adaptor modules}.
 @format-benchmark[#:name 'dungeon
                   #:author "Vincent St-Amour"
                   #:purpose "Maze generator"
-                  #:origin #f
+                  #:origin "https://github.com/stamourv/dungeons-and-repossessions"
                   #:depends '()]{
   Builds a maze of wall and floor objects by drawing first-class classes from
    a list.
