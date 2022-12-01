@@ -128,7 +128,7 @@ See also the GitHub release notes:
                    and change the benchmark to stop using a player AI that times out.
                    Timing info from sandbox depends on system calls; measurements should
                    be more stable without it.
-                   Based on a first measurment, the typed/untyped overhead in @racket[acquire]
+                   Based on a first measurement, the typed/untyped overhead in @racket[acquire]
                    is the same before and after.}]]
   @item[
     @history[#:changed "7.0"
@@ -478,7 +478,7 @@ In Typed Racket terms, this means every import between migratable modules is
 The data in this section was obtained by running a version of Racket v6.12
  instrumented with compiler-level counters to track chaperone use.
 The patch implementing the counters is part of this repository's source code,
- and is adapted from a patch by @hyperlink["http://cs.brown.edu/~sstrickl/chaperones/"]{Strickland, Tobin-Hochstadt, Findler, and Flatt (2012)}.
+ and is adapted from a patch by @hyperlink["http://cs.brown.edu/~sstrickl/chaperones/"]{Strickland, Tobin--Hochstadt, Findler, and Flatt (2012)}.
 
 
 @subsection{Time and Garbage Collection Details}
