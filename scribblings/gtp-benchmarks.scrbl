@@ -123,6 +123,14 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
+    @history[#:changed "9.0"
+             @elem{Substantially revise @racket[acquire] and @racket[take5].
+                   Before, @racket[acquire] ran a game with AI players that all raised
+                   exceptions and @racket[take5] ignored an input list of AI players.
+                   After, the @racket[acquire] players make valid moves and
+                   @racket[take5] uses its input. These changes have little impact
+                   on typed/untyped overhead.}]]
+  @item[
     @history[#:changed "8.0"
              @elem{Remove @racket[racket/sandbox] dependency from @bm{acquire}
                    and change the benchmark to stop using a player AI that times out.
