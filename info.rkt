@@ -8,4 +8,4 @@
 (define scribblings '(("scribblings/gtp-benchmarks.scrbl" () ("Benchmarks"))))
 (define compile-omit-paths '("benchmarks" "utilities/sample-gtp-measure-manifest.rkt"))
 (define test-omit-paths '("benchmarks" "utilities/sample-gtp-measure-manifest.rkt"))
-
+(define license 'LGPL-2.0-or-later)
