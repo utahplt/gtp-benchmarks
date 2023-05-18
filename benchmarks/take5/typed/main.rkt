@@ -43,6 +43,6 @@
                     ((1 0) (2 0) (3 0) (6 0) (7 0) (8 0) (0 56) (4 80) (9 80) (5 120))))
     (raise-user-error 'take5 "TEST FAILURE")))
 
-(module+ main
-  (time (for ([n (in-range LOOPS)])
-          (main PLAYERS))))
+(time (for ([n (in-range LOOPS)])
+        (main PLAYERS)))
+
