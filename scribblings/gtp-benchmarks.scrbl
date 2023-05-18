@@ -123,6 +123,12 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
+    @history[#:changed "9.2"
+             @elem{Add an @racket[assert] in @racket[take5] to accommodate the
+                   improved type of @racket[random] in Racket v8.9
+                   (@hyperlink["https://github.com/racket/typed-racket/commit/246173a67"]{@tt{246173a67}}).
+                   This change affects the typed and untyped configurations.}]]
+  @item[
     @history[#:changed "9.1"
              @elem{In @racket[take5], replace the @racket[(module+ main expr)] with
                    the unwrapped expression @racket[expr]. This matches the structure

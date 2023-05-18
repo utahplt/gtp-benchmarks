@@ -44,7 +44,7 @@
 ;; pick a random number of BULLS 
 (: random-bulls (-> Bulls))
 (define (random-bulls)
-  (random MIN-BULL (+ MAX-BULL 1) rng))
+  (assert (random MIN-BULL (+ MAX-BULL 1) rng) exact-nonnegative-integer?))
 
 (: card-pool% CardPool%)
 (define card-pool%
