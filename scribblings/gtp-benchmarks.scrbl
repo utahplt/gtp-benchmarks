@@ -123,6 +123,14 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
+    @history[#:changed "9.1"
+             @elem{In @racket[take5], replace the @racket[(module+ main expr)] with
+                   the unwrapped expression @racket[expr]. This matches the structure
+                   of other benchmarks and makes it easier to run tools like
+                   @other-doc['(lib "profile/scribblings/profile.scrbl") #:indirect "statistical profiler"]
+                   and @other-doc['(lib "contract-profile/scribblings/contract-profile.scrbl") #:indirect "contract profiler"],
+                   which do not check submodules by default.}]
+  @item[
     @history[#:changed "9.0"
              @elem{Substantially revise @racket[acquire] and @racket[take5].
                    Before, @racket[acquire] ran a game with AI players that all raised
