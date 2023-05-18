@@ -129,7 +129,7 @@ See also the GitHub release notes:
                    of other benchmarks and makes it easier to run tools like
                    @other-doc['(lib "profile/scribblings/profile.scrbl") #:indirect "statistical profiler"]
                    and @other-doc['(lib "contract-profile/scribblings/contract-profile.scrbl") #:indirect "contract profiler"],
-                   which do not check submodules by default.}]
+                   which do not check submodules by default.}]]
   @item[
     @history[#:changed "9.0"
              @elem{Substantially revise @racket[acquire] and @racket[take5].
@@ -279,10 +279,11 @@ Note: these graphs do not show @emph{type adaptor modules}.
                   #:purpose "Economy Simulator"
                   #:origin "https://github.com/ayaderaghul/sample-fsm"
                   #:depends '()]{
-  @; TODO sentence too long
   Simulates an economy with finite-state automata.
   The economy is implemented as a vector; this vector repeatedly crosses between
   modules in the benchmark.
+
+  @racket[fsmoo] is similar, but implements the economy as an object.
 }
 @format-benchmark[#:name 'gregor
                   #:author "Jon Zeppieri"
