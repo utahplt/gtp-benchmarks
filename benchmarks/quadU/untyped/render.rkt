@@ -5,7 +5,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
  "../base/untyped.rkt"
  "../base/core.rkt"
  (only-in racket/list filter-not)

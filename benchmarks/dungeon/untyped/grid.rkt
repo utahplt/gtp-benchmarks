@@ -15,7 +15,6 @@
 
 (require
   "../base/un-types.rkt"
-  require-typed-check
   ;math/array ;; TODO it'd be nice to use this
 )
 (require (only-in "cell.rkt"

@@ -10,7 +10,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
  "../base/untyped.rkt"
  (only-in racket/string string-replace string-join)
  (only-in racket/list partition drop-right drop make-list filter-not take splitf-at)

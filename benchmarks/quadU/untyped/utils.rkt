@@ -21,7 +21,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  require-typed-check
   "../base/untyped.rkt"
   "../base/core.rkt"
   (only-in racket/list append-map empty? empty split-at-right first splitf-at)

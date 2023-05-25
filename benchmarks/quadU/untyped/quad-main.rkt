@@ -7,7 +7,6 @@
 ;; ----------------------------------------------------------------------------
 
 (require
-  require-typed-check
   "../base/core.rkt"
   "../base/untyped.rkt"
   racket/class

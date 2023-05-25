@@ -5,7 +5,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
-  require-typed-check
   racket/file
   (only-in racket/include include)
 )

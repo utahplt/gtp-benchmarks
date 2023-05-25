@@ -10,7 +10,6 @@
 ;; -----------------------------------------------------------------------------
 
 (require
- require-typed-check
  "../base/untyped.rkt"
  "ocm-struct.rkt"
  (only-in racket/list argmin)
