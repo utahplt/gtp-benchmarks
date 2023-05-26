@@ -584,6 +584,27 @@ When rebuilding this document, subscribe to the @litchar{gtp-benchmarks} logger
 }
 
 
+@subsection{Size Information}
+
+@defmodule[gtp-benchmarks/utilities/size-info]{
+  Script for counting size and dependencies.
+}
+
+
+@defproc[(benchmark-size-info [name symbol?]) hash?]{
+  Count size statistics for a benchmark.
+  Return a hash of labeled values.
+
+  @examples[
+    #:eval (make-base-eval '(require gtp-benchmarks/utilities/size-info))
+    #:once
+    (benchmark-size-info 'zordoz)
+  ]
+
+  @history[#:added "9.2.1"]
+}
+
+
 @subsection{Type Information}
 
 @defmodule[gtp-benchmarks/utilities/type-info]{

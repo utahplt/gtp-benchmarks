@@ -7,6 +7,7 @@
   format-time-info
   library
   bm
+  get-gradual-typing-static-info
   tabulate-gradual-typing-benchmarks-size)
 
 (require
