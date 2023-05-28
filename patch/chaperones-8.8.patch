@@ -1,0 +1,345 @@
+From 821574176d9e8419acaad786868e464b552308b5 Mon Sep 17 00:00:00 2001
+From: Ben Greenman <benjaminlgreenman@gmail.com>
+Date: Sun, 28 May 2023 16:58:40 -0400
+Subject: [PATCH] count-chaps: 8.8 bc
+
+---
+ racket/src/bc/build.zuo     | 12 ++++----
+ racket/src/bc/src/fun.c     | 19 +++++++++++-
+ racket/src/bc/src/schchap.h | 20 +++++++++++++
+ racket/src/bc/src/struct.c  | 20 +++++++++++++
+ racket/src/bc/src/vector.c  | 58 ++++++++++---------------------------
+ 5 files changed, 79 insertions(+), 50 deletions(-)
+ create mode 100644 racket/src/bc/src/schchap.h
+
+diff --git a/racket/src/bc/build.zuo b/racket/src/bc/build.zuo
+index 4d9ec13477..c1f3567c2b 100644
+--- a/racket/src/bc/build.zuo
++++ b/racket/src/bc/build.zuo
+@@ -68,8 +68,6 @@
+                                       (string-upcase (or (lookup 'MMM_INSTALLED)
+                                                          "BC"))))
+ 
+-  (define wxvariant-def (~a (or (lookup 'WXVARIANT) "wx_xt") "=1"))
+-
+   (define rktio-dir (at-dir "rktio"))
+   (define librktio.a+rktio_config.h (setup-rktio (at-source "../rktio") rktio-dir config))
+   (define librktio.a (list-ref librktio.a+rktio_config.h 0))
+@@ -1025,7 +1023,7 @@
+              ["file" ,@rktio-headers]
+              ["fun" ,@rktio-headers
+                     ,(at-source "src/mzmark_fun.inc") ,(at-source "src/schmap.inc")
+-                    ,(at-source "src/future.h")]
++                    ,(at-source "src/future.h") ,(at-source "src/schchap.h")]
+              ["future" ,(at-source "src/future.h") ,(at-source "sconfig.h") ,(at-source "uconfig.h") ,mzconfig.h
+                        ,(at-source "src/mzmark_future.inc")
+                        ,(at-source "src/jit_ts_future_glue.c") ,(at-source "src/jit_ts_runtime_glue.c") ,(at-source "src/jit_ts_protos.h")]
+@@ -1066,10 +1064,11 @@
+              ["string" ,@rktio-headers ,(at-source "../version/racket_version.h")
+                        ,(at-source "src/mzmark_string.inc") ,(at-source "src/strops.inc")
+                        ,(at-source "src/schustr.inc") ,(at-source "src/systype.inc")]
+-             ["struct" ,(at-source "src/mzmark_struct.inc")]
++             ["struct" ,(at-source "src/mzmark_struct.inc") ,(at-source "src/schchap.h")]
+              ["syntax" ,(at-source "src/mzmark_syntax.inc")]
+              ["sema" ,(at-source "src/mzmark_sema.inc")]
+              ["type" ,(at-source "src/mzmark_type.inc")]
++             ["vector" ,(at-source "src/schchap.h")]
+              ["validate" ,(at-source "src/mzmark_validate.inc")]))
+ 
+         ;; 
+@@ -1227,7 +1226,7 @@
+                (list maincgc1.o maincgc.o grmaincgc.o)
+                (list (at-source "main.c") (at-source "main.c") (at-source "gracket/grmain.c"))
+                (list #f #f #t)
+-               (list '("DLL_3M_SUFFIX=\"1\"") '() (list wxvariant-def)))
++               (list '("DLL_3M_SUFFIX=\"1\"") '() '()))
+ 
+         ;; FFI compiled for CGC
+         [:target ,foreigncgc.o (,(at-source "foreign/foreign.c")
+@@ -1278,8 +1277,7 @@
+                             ,@quiet-deps)
+                            ,(lambda (path token)
+                               (xform path main.c 'no-precomp token
+-                                     (build-shell (make-directory-defs gracket?)
+-                                                  (~a "-D" wxvariant-def))))])
++                                     (make-directory-defs gracket?)))])
+                (list (at-source "main.c") (at-source "gracket/grmain.c"))
+                (list #f #t))
+ 
+diff --git a/racket/src/bc/src/fun.c b/racket/src/bc/src/fun.c
+index 785b174a41..ef8e031122 100644
+--- a/racket/src/bc/src/fun.c
++++ b/racket/src/bc/src/fun.c
+@@ -7,6 +7,7 @@
+ #include "schpriv.h"
+ #include "schmach.h"
+ #include "schrktio.h"
++#include "schchap.h"
+ 
+ static void ASSERT_SUSPEND_BREAK_ZERO() {
+ #if 0
+@@ -71,6 +72,10 @@ THREAD_LOCAL_DECL(static Scheme_Overflow *offstack_overflow);
+ THREAD_LOCAL_DECL(int scheme_cont_capture_count);
+ THREAD_LOCAL_DECL(static int scheme_prompt_capture_count);
+ 
++#if COUNT_CHAPS
++int proc_makes=0, proc_apps=0, proc_maxdepth=0;
++#endif
++
+ #define MARK_CACHE_THRESHOLD 16
+ 
+ /* locals */
+@@ -3554,9 +3559,18 @@ static Scheme_Object *do_chaperone_procedure(const char *name, const char *whati
+   Scheme_Chaperone *px, *px2;
+   Scheme_Object *val = argv[0], *orig, *r, *app_mark;
+   Scheme_Object *props;
++#if COUNT_CHAPS
++  proc_makes++;
++#endif
+ 
+-  if (SCHEME_CHAPERONEP(val))
++  if (SCHEME_CHAPERONEP(val)) {
++    #if COUNT_CHAPS
++      int d = 1;
++      d += chap_depth(val);
++      if (proc_maxdepth < d) { proc_maxdepth = d; }
++    #endif
+     val = SCHEME_CHAPERONE_VAL(val);
++  }
+ 
+   if (!SCHEME_PROCP(val))
+     scheme_wrong_contract(name, "procedure?", 0, argc, argv);
+@@ -3870,6 +3884,9 @@ Scheme_Object *scheme_apply_chaperone(Scheme_Object *o, int argc, Scheme_Object
+   int need_pop_mark;
+   Scheme_Cont_Frame_Data cframe;
+ 
++#if COUNT_CHAPS
++  proc_apps++;
++#endif
+   if (SCHEME_RPAIRP(o)) {
+     /* An applicable struct, where a layer of struct chaperones
+        has been removed from the object to apply, but we will
+diff --git a/racket/src/bc/src/schchap.h b/racket/src/bc/src/schchap.h
+new file mode 100644
+index 0000000000..a4e7aea9f0
+--- /dev/null
++++ b/racket/src/bc/src/schchap.h
+@@ -0,0 +1,20 @@
++#define COUNT_CHAPS 1
++
++#if COUNT_CHAPS
++#include "schpriv.h"
++
++extern int proc_makes,   proc_apps,   proc_maxdepth;
++extern int struct_makes, struct_apps, struct_maxdepth;
++extern int vec_makes,    vec_apps,    vec_maxdepth;
++
++//bg
++static int chap_depth(Scheme_Object *val)
++{
++  int depth = 0;
++  while (SCHEME_CHAPERONEP(val)) {
++    ++depth;
++    val = ((Scheme_Chaperone *)val)->prev;
++  }
++  return depth;
++}
++#endif
+diff --git a/racket/src/bc/src/struct.c b/racket/src/bc/src/struct.c
+index 8b35ea037c..38d2fec254 100644
+--- a/racket/src/bc/src/struct.c
++++ b/racket/src/bc/src/struct.c
+@@ -1,5 +1,6 @@
+ #include "schpriv.h"
+ #include "schmach.h"
++#include "schchap.h"
+ 
+ #define PROP_USE_HT_COUNT 5
+ 
+@@ -43,6 +44,9 @@ READ_ONLY static Scheme_Object *struct_info_proc;
+ ROSYM static Scheme_Object *ellipses_symbol;
+ ROSYM static Scheme_Object *prefab_symbol;
+ 
++#if COUNT_CHAPS
++  int struct_makes=0, struct_apps=0, struct_maxdepth=0;
++#endif
+ /* locals */
+ 
+ typedef enum {
+@@ -1104,6 +1108,10 @@ static Scheme_Object *chaperone_prop_acc_overflow(const char *who, Scheme_Object
+ static Scheme_Object *do_chaperone_prop_accessor(const char *who, Scheme_Object *prop,
+                                                  Scheme_Object *orig_arg,  Scheme_Object *arg)
+ {
++#if COUNT_CHAPS
++  struct_apps++;
++#endif
++
+   while (1) {
+     if (SCHEME_CHAPERONEP(arg)) {
+       Scheme_Chaperone *px = (Scheme_Chaperone *)arg;
+@@ -2155,6 +2163,9 @@ static void raise_undefined_error(const char *who, Scheme_Object *prim, Scheme_O
+ static Scheme_Object *chaperone_struct_ref(const char *who, Scheme_Object *prim, 
+                                            Scheme_Object *orig_o, Scheme_Object *o, int i)
+ {
++#if COUNT_CHAPS
++  struct_apps++;
++#endif
+   while (1) {
+     if (!SCHEME_CHAPERONEP(o)) {
+       return ((Scheme_Structure *)o)->slots[i];
+@@ -6203,9 +6214,18 @@ static Scheme_Object *do_chaperone_struct(const char *name, int is_impersonator,
+   intptr_t field_pos;
+   int empty_si_chaperone = 0, *empty_redirects = NULL, has_redirect = 0, witnessed = 0;
+ 
++#if COUNT_CHAPS
++  struct_makes++;
++#endif
++
+   if (argc == 1) return argv[0];
+ 
+   if (SCHEME_CHAPERONEP(val)) {
++  #if COUNT_CHAPS
++    int d = 1;
++    d += chap_depth(val);
++    if (struct_maxdepth < d) { struct_maxdepth = d; }
++  #endif
+     props = ((Scheme_Chaperone *)val)->props;
+     val = SCHEME_CHAPERONE_VAL(val);
+   }
+diff --git a/racket/src/bc/src/vector.c b/racket/src/bc/src/vector.c
+index 97a7722a87..1bb91d26fe 100644
+--- a/racket/src/bc/src/vector.c
++++ b/racket/src/bc/src/vector.c
+@@ -1,5 +1,6 @@
+ #include "schpriv.h"
+ #include "schmach.h"
++#include "schchap.h"
+ 
+ /* globals */
+ READ_ONLY Scheme_Object *scheme_vector_proc;
+@@ -29,10 +30,12 @@ READ_ONLY Scheme_Object *scheme_unsafe_struct_star_ref_proc;
+ READ_ONLY Scheme_Object *scheme_unsafe_struct_set_proc;
+ READ_ONLY Scheme_Object *scheme_unsafe_struct_star_set_proc;
+ 
++#if COUNT_CHAPS
++  int vec_makes=0, vec_apps=0, vec_maxdepth=0;
++#endif
++
+ /* locals */
+ static Scheme_Object *vector_p (int argc, Scheme_Object *argv[]);
+-static Scheme_Object *immutable_vector_p (int argc, Scheme_Object *argv[]);
+-static Scheme_Object *mutable_vector_p (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *vector (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *vector_immutable (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *vector_length (int argc, Scheme_Object *argv[]);
+@@ -62,8 +65,6 @@ static Scheme_Object *unsafe_struct_set (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_struct_star_ref (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_struct_star_set (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_struct_star_cas (int argc, Scheme_Object *argv[]);
+-static Scheme_Object *unsafe_struct_star_type (int argc, Scheme_Object *argv[]);
+-static Scheme_Object *unsafe_struct_type (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_string_len (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_string_ref (int argc, Scheme_Object *argv[]);
+ static Scheme_Object *unsafe_string_set (int argc, Scheme_Object *argv[]);
+@@ -97,16 +98,6 @@ scheme_init_vector (Scheme_Startup_Env *env)
+   scheme_addto_prim_instance("vector?", p, env);
+   scheme_vector_p_proc = p;
+ 
+-  p = scheme_make_folding_prim(immutable_vector_p, "immutable-vector?", 1, 1, 1);
+-  SCHEME_PRIM_PROC_FLAGS(p) |= scheme_intern_prim_opt_flags(SCHEME_PRIM_IS_OMITABLE
+-                                                            | SCHEME_PRIM_PRODUCES_BOOL);
+-  scheme_addto_prim_instance("immutable-vector?", p, env);
+-
+-  p = scheme_make_folding_prim(mutable_vector_p, "mutable-vector?", 1, 1, 1);
+-  SCHEME_PRIM_PROC_FLAGS(p) |= scheme_intern_prim_opt_flags(SCHEME_PRIM_IS_OMITABLE
+-                                                            | SCHEME_PRIM_PRODUCES_BOOL);
+-  scheme_addto_prim_instance("mutable-vector?", p, env);
+-
+   REGISTER_SO(scheme_make_vector_proc);
+   p = scheme_make_immed_prim(scheme_checked_make_vector, "make-vector", 1, 2);
+   SCHEME_PRIM_PROC_FLAGS(p) |= scheme_intern_prim_opt_flags(SCHEME_PRIM_IS_UNARY_INLINED
+@@ -369,9 +360,6 @@ scheme_init_unsafe_vector (Scheme_Startup_Env *env)
+   SCHEME_PRIM_PROC_FLAGS(p) |= scheme_intern_prim_opt_flags(SCHEME_PRIM_IS_NARY_INLINED);
+   scheme_addto_prim_instance("unsafe-struct*-cas!", p, env);
+ 
+-  p = scheme_make_immed_prim(unsafe_struct_star_type, "unsafe-struct*-type", 1, 1);
+-  scheme_addto_prim_instance("unsafe-struct*-type", p, env);
+-
+   REGISTER_SO(scheme_unsafe_string_length_proc);
+   p = scheme_make_immed_prim(unsafe_string_len, "unsafe-string-length", 1, 1);
+   SCHEME_PRIM_PROC_FLAGS(p) |= scheme_intern_prim_opt_flags(SCHEME_PRIM_IS_UNARY_INLINED
+@@ -531,22 +519,6 @@ vector_p (int argc, Scheme_Object *argv[])
+   return (SCHEME_CHAPERONE_VECTORP(argv[0]) ? scheme_true : scheme_false);
+ }
+ 
+-static Scheme_Object *
+-immutable_vector_p (int argc, Scheme_Object *argv[])
+-{
+-  Scheme_Object *obj = argv[0];
+-  if SCHEME_NP_CHAPERONEP(obj) obj = SCHEME_CHAPERONE_VAL(obj);
+-  return ((SCHEME_VECTORP(obj) && SCHEME_IMMUTABLEP(obj)) ? scheme_true : scheme_false);
+-}
+-
+-static Scheme_Object *
+-mutable_vector_p (int argc, Scheme_Object *argv[])
+-{
+-  Scheme_Object *obj = argv[0];
+-  if SCHEME_NP_CHAPERONEP(obj) obj = SCHEME_CHAPERONE_VAL(obj);
+-  return ((SCHEME_VECTORP(obj) && !SCHEME_IMMUTABLEP(obj)) ? scheme_true : scheme_false);
+-}
+-
+ Scheme_Object *
+ scheme_checked_make_vector (int argc, Scheme_Object *argv[])
+ {
+@@ -704,6 +676,9 @@ Scheme_Object *scheme_chaperone_vector_ref2(Scheme_Object *o, int i, Scheme_Obje
+     Scheme_Chaperone *px = (Scheme_Chaperone *)o;
+     Scheme_Object *a[4], *red, *orig;
+ 
++#if COUNT_CHAPS
++    vec_apps++;
++#endif
+ #ifdef DO_STACK_CHECK
+     {
+ # include "mzstkchk.h"
+@@ -1221,7 +1196,15 @@ static Scheme_Object *do_chaperone_vector(const char *name, int is_impersonator,
+   Scheme_Object *redirects;
+   Scheme_Object *props;
+ 
++#if COUNT_CHAPS
++  vec_makes++;
++#endif
+   if (SCHEME_CHAPERONEP(val)) {
++    #if COUNT_CHAPS
++      int d = 1;
++      d += chap_depth(val);
++      if (vec_maxdepth < d) { vec_maxdepth = d; }
++    #endif
+     val = SCHEME_CHAPERONE_VAL(val);
+   }
+ 
+@@ -1438,11 +1421,6 @@ static Scheme_Object *unsafe_struct_star_cas (int argc, Scheme_Object *argv[])
+ #endif
+ }
+ 
+-static Scheme_Object *unsafe_struct_star_type (int argc, Scheme_Object *argv[])
+-{
+-  return (Scheme_Object *)((Scheme_Structure *)argv[0])->stype;
+-}
+-
+ static Scheme_Object *unsafe_string_len (int argc, Scheme_Object *argv[])
+ {
+   intptr_t n = SCHEME_CHAR_STRLEN_VAL(argv[0]);
+@@ -1527,10 +1505,6 @@ static Scheme_Object *unsafe_string_immutable_bang (int argc, Scheme_Object *arg
+   if (!SCHEME_CHAR_STRINGP(o))
+     scheme_wrong_contract("unsafe-string->immutable-string!", "string?", 0, argc, argv);
+ 
+-  if (!SCHEME_CHAR_STRLEN_VAL(o)) {
+-    return scheme_zero_length_char_immutable_string;
+-  }
+-
+   SCHEME_SET_IMMUTABLE(o);
+ 
+   return o;
+-- 
+2.26.2
+
