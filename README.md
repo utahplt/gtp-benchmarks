@@ -1,6 +1,6 @@
 gtp-benchmarks
 ===
-[![Build Status](https://travis-ci.org/bennn/gtp-benchmarks.svg)](https://travis-ci.org/bennn/gtp-benchmarks)
+[![Build Status](https://travis-ci.org/utahplt/gtp-benchmarks.svg)](https://travis-ci.org/utahplt/gtp-benchmarks)
 [![Scribble](https://img.shields.io/badge/Docs-Scribble-blue.svg)](http://docs.racket-lang.org/gtp-benchmarks/index.html)
 
 Gradual Typing Performance benchmark programs.
@@ -8,6 +8,12 @@ Gradual Typing Performance benchmark programs.
 This is a collection of Racket programs.
 Each program can run in exponentially-many _configurations_ that differ in
  terms of their type annotations.
+
+
+#### Companion software
+
+- <https://github.com/utahplt/gtp-measure>
+- <https://github.com/utahplt/gtp-plot>
 
 
 Overview
