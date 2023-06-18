@@ -87,6 +87,22 @@ Dependencies
 - [`require-typed-check`](https://docs.racket-lang.org/require-typed-check/index.html)
 
 
+Cite
+
+===
+
+```
+@inproceedings{g-rep-2023,
+  author={Greenman, Ben},
+  title={{GTP} Benchmarks for Gradual Typing Performance},
+  booktitle={{REP}},
+  publisher={{ACM}},
+  pages={to appear},
+  doi={10.1145/3589806.3600034},
+  year={2023}
+}
+
+
 
 History
 ---
