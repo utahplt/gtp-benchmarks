@@ -97,7 +97,7 @@ Cite
   title={{GTP} Benchmarks for Gradual Typing Performance},
   booktitle={{REP}},
   publisher={{ACM}},
-  pages={to appear},
+  pages={102--114},
   doi={10.1145/3589806.3600034},
   year={2023}
 }
