@@ -111,5 +111,5 @@ Original development: <https://github.com/nuprl/gradual-typing-performance>
 Subsets / earlier-versions of these benchmarks have appeared in:
 
 - [_Is Sound Gradual Typing Dead?_](https://dl.acm.org/citation.cfm?id=2837630). Asumu Takikawa, Daniel Feltey, Ben Greenman, Max S. New, Jan Vitek, and Matthias Felleisen. POPL 2016.
-- _How to Evaluate the Performance of Gradual Type Systems_. Ben Greenman, Asumu Takikawa, Max S. New, Daniel Feltey, Robert Bruce Findler, Jan Vitek, and Matthias Felleisen. Submitted for publication.
+- [_How to Evaluate the Performance of Gradual Type Systems_](https://doi.org/10.1017/S0956796818000217). Ben Greenman, Asumu Takikawa, Max S. New, Daniel Feltey, Robert Bruce Findler, Jan Vitek, and Matthias Felleisen. JFP 2019.
 - [_Sound Gradual Typing: Only Mostly Dead_](https://dl.acm.org/citation.cfm?id=3133878). Spenser Bauman, Carl Friedrich Bolz-Tereick, Jeremy Siek, and Sam Tobin-Hochstadt. OOPSLA 2017.
