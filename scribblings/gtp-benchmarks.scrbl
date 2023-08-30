@@ -36,7 +36,7 @@ Latest Version: @hyperlink["https://github.com/bennn/gtp-benchmarks/releases"]{@
 Source: @url{https://github.com/bennn/gtp-benchmarks}
 
 This package contains benchmarks for measuring the cost of typed/untyped
- interaction in Typed Racket.
+ interaction in Typed Racket @cite{REP}.
 
 @bold{Always include a version number when reporting data on these benchmarks.}
 
@@ -658,8 +658,15 @@ When rebuilding this document, subscribe to the @litchar{gtp-benchmarks} logger
    (define ECOOP "European Conference on Object-Oriented Programming")
    (define SNAPL "Summit oN Advances in Programming Languages")
    (define JFP "Journal of Functional Programming")
+   (define REP "1st ACM Conference on Reproducibility and Replicability")
 
    (bibliography #:tag "gtp-bibliography"
+     (bib-entry #:key "REP-2023"
+                #:author "Ben Greenman"
+                #:title "GTP Benchmarks for Gradual Typing Performance"
+                #:location REP
+                #:date "2023"
+                #:url "https://doi.org/10.1145/3589806.3600034")
      (bib-entry #:key "JFP-2019"
                 #:author "Ben Greenman and Asumu Takikawa and Max S. New and Daniel Feltey and Robert Bruce Findler and Jan Vitek and Matthias Felleisen"
                 #:title "How to evaluate the performance of gradual type systems"
