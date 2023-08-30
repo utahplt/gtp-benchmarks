@@ -88,8 +88,7 @@ Dependencies
 
 
 Cite
-
-===
+---
 
 ```
 @inproceedings{g-rep-2023,
@@ -101,7 +100,7 @@ Cite
   doi={10.1145/3589806.3600034},
   year={2023}
 }
-
+```
 
 
 History
