@@ -36,7 +36,7 @@ Latest Version: @hyperlink["https://github.com/bennn/gtp-benchmarks/releases"]{@
 Source: @url{https://github.com/bennn/gtp-benchmarks}
 
 This package contains benchmarks for measuring the cost of typed/untyped
- interaction in Typed Racket @cite{REP}.
+ interaction in Typed Racket @cite{REP-2023}.
 
 @bold{Always include a version number when reporting data on these benchmarks.}
 
