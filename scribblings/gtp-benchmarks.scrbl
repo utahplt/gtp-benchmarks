@@ -123,6 +123,11 @@ See also the GitHub release notes:
 
 @itemlist[
   @item[
+    @history[#:changed "9.3"
+             @elem{Change a @racket[require/typed] declaration in @racket[morsecode] from
+                   @racket[Index] to @racket[Integer] to match the exporting module.
+                   (@hyperlink["https://github.com/utahplt/gtp-benchmarks/commit/05703981ab6eae658014a9850e5cde79278b47f0"]{@tt{057039}}).}]]
+  @item[
     @history[#:changed "9.2"
              @elem{Add an @racket[assert] in @racket[take5] to accommodate the
                    improved type of @racket[random] in Racket v8.9
