@@ -14,7 +14,7 @@
   [string->morse (-> String String)])
 
 (require/typed/check "levenshtein.rkt"
-               [string-levenshtein (String String -> Integer)])
+               [string-levenshtein (String String -> Index)])
 
 (define word-frequency-list "./../base/frequency.rktd")
 (define word-frequency-list-small "./../base/frequency-small.rktd")
