@@ -60,10 +60,13 @@ or running a setup script.
 
 @itemlist[
 @item{
-  Create a new directory relative to the benchmark's @filepath{base/} folder (if it exists)
+  Create a new directory next to the benchmark's @filepath{base/} folder.
+  (From inside the newly-created directory, the path @filepath{../base/} must work,
+  if a @filepath{base} folder exists.)
 }
 @item{
-  Copy the benchmark's @filepath{both/} folder into the new directory
+  Copy the contents of the benchmark's @filepath{both/} directory (if it exists)
+  into the new directory.
 }
 @item{
   Copy your favorite mix of @filepath{typed/} and @filepath{untyped/} modules into the new directory
@@ -72,6 +75,12 @@ or running a setup script.
   Run the @filepath{main.rkt} module
 }
 ]
+
+Typed benchmark files probably require the package @racketmodname[require-typed-check].
+You can either install it, or manually edit all uses to either @racket[require/typed]
+(if the required module is untyped)
+or @racket[require] (if the required module is typed)
+as appropriate.
 
 
 @subsection[#:tag "gtp:measure-run"]{Official Route}

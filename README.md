@@ -35,7 +35,7 @@ To Run
 
 - Go to the benchmark's directory
 - Create a new directory
-- Copy in all the `both/` files, if any
+- Copy in all the `both/*` files, if any
 - Copy in your choice of `typed/` and `untyped/` files
 - Run `main.rkt`
 
